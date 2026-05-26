@@ -5,15 +5,17 @@ Welcome to **AuraMemory**, a next-generation cognitive memory engine designed to
 To launch this as a viral, high-reach social media brand, this workspace includes an interactive, gorgeous force-directed graph dashboard, alongside an autonomous **Conversation Watcher Agent** and a self-reflective **Git Pusher CLI Tool**.
 
 <!-- RELEASE_HIGHLIGHTS_START -->
-## 🚀 Latest Release Highlights (v1.1.4)
+## 🚀 Latest Release Highlights (v1.1.5)
 
 > [!TIP]
 > **AuraMemory** is actively maintained! Here is what just landed in our latest release (`2026-05-27`):
 
-- ⚙️ **Updates**: Autonomous self-indexed repository release.
+- 🚀 **Achievements**: None
+- 💥 **Fixed**: None
+- ⚙️ **Updates**: Removed Instagram playbook from public README to keep repository strictly developer-focused
 
 ### 📈 Active Workspace Cognitive Metrics
-- **Package Version**: `v1.1.4`
+- **Package Version**: `v1.1.5`
 - **Cognitive Map**: **19 active files** spanning **5679 lines of code** projected into the continuous 8D space.
 - **Process Latency**: **< 0.1ms** vector cosine calculations.
 - **Core Promoted Assets**: None
@@ -141,17 +143,6 @@ Run these examples natively inside your terminal:
 python3 examples/basic_usage.py
 python3 examples/guardrails_demo.py
 ```
-
----
-
-## 📸 The 30-Day Instagram "Userjourney" Startup Playbook
-
-You want to monetize this and attract networking and venture capital (VC) investment. Here is your step-by-step funnel strategy:
-
-1. **The Hook (Reel video):** Record a screen capture of the visuals dashboard floating. Type a secret password like `token_987654321` into the console, hit Commit, and show the console scrubbing it into `<API_KEY_SCRUBBED>`. Then search for *"machine learning"* and film the canvas pulsing *"AI Architecture"* nodes because of **semantic vector embeddings similarity**, even with zero exact tag overlaps!
-2. **The Education (Caption / Carousel):** Explain that standard Vector DBs are dead because local process embeddings process memory in **< 0.1ms**, reducing API overhead.
-3. **The Call-to-action (CTA):** *“Want to build native AI brains that think like humans? Comment 'MEMORY' and I'll send you the full open-source Python code and visualizer directly!”*
-4. **The Conversion:** By giving away high-quality engineering value, you build a targeted community of developers, founders, and VCs looking for agentic memory solutions.
 
 ---
 

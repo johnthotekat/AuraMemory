@@ -3,6 +3,18 @@
 All notable changes to the AuraMemory cognitive memory module will be documented in this file.
 
 ---
+## [1.1.5] - 2026-05-27: Release v1.1.5
+
+### 🚀 Achievements & Added Features
+* **Feature**: None
+
+### 💥 Breaks & Bug Fixes
+* **Fixed**: None
+
+### ⚙️ Refactors & Updates
+* **Update**: Removed Instagram playbook from public README to keep repository strictly developer-focused
+
+---
 ## [1.1.4] - 2026-05-27: Release v1.1.4
 
 ### 🚀 Achievements & Added Features
