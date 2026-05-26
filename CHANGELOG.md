@@ -3,6 +3,19 @@
 All notable changes to the AuraMemory cognitive memory module will be documented in this file.
 
 ---
+## [1.1.3] - 2026-05-27: Release v1.1.3
+
+### 🚀 Achievements & Added Features
+* **Feature**: Universal MCP Context Gateway
+* **Feature**: Token-Compressed Context Optimizer
+
+### 💥 Breaks & Bug Fixes
+* **Fixed**: None
+
+### ⚙️ Refactors & Updates
+* **Update**: Added detailed configuration steps to README and specification documents
+
+---
 ## [1.1.2] - 2026-05-27: Release v1.1.2
 
 ### 🚀 Achievements & Added Features

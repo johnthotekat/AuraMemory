@@ -5,18 +5,18 @@ Welcome to **AuraMemory**, a next-generation cognitive memory engine designed to
 To launch this as a viral, high-reach social media brand, this workspace includes an interactive, gorgeous force-directed graph dashboard, alongside an autonomous **Conversation Watcher Agent** and a self-reflective **Git Pusher CLI Tool**.
 
 <!-- RELEASE_HIGHLIGHTS_START -->
-## 🚀 Latest Release Highlights (v1.1.2)
+## 🚀 Latest Release Highlights (v1.1.3)
 
 > [!TIP]
 > **AuraMemory** is actively maintained! Here is what just landed in our latest release (`2026-05-27`):
 
-- 🚀 **Achievements**: Added dynamic README release highlights and cognitive workspace metrics
+- 🚀 **Achievements**: Universal MCP Context Gateway, Token-Compressed Context Optimizer
 - 💥 **Fixed**: None
-- ⚙️ **Updates**: Cleaned up repository layout
+- ⚙️ **Updates**: Added detailed configuration steps to README and specification documents
 
 ### 📈 Active Workspace Cognitive Metrics
-- **Package Version**: `v1.1.2`
-- **Cognitive Map**: **16 active files** spanning **5068 lines of code** projected into the continuous 8D space.
+- **Package Version**: `v1.1.3`
+- **Cognitive Map**: **17 active files** spanning **5543 lines of code** projected into the continuous 8D space.
 - **Process Latency**: **< 0.1ms** vector cosine calculations.
 - **Core Promoted Assets**: None
 <!-- RELEASE_HIGHLIGHTS_END -->
@@ -172,11 +172,11 @@ python3 agents/watcher.py
 ```
 
 ### 3. Launch the Premium Visualizer Dashboard
-Start a lightweight local server to open the glassmorphism visualizer:
+Start a lightweight local server from the repository root to avoid browser security restrictions when loading data:
 ```bash
-python3 -m http.server 8000 --directory visuals/
+python3 -m http.server 8001
 ```
-Then, open your browser and navigate to: **[http://localhost:8000](http://localhost:8000)**.
+Then, open your browser and navigate to: **[http://localhost:8001/visuals/](http://localhost:8001/visuals/)**.
 Drag nodes, simulate inputs, adjust guardrails, and recall memories semantically!
 
 ### 4. Push Updates Natively
@@ -184,3 +184,45 @@ Run the self-reflective Git Pusher Agent to analyze local repository changes and
 ```bash
 python3 agents/pusher.py
 ```
+
+---
+
+## 🔌 Universal Model Context Protocol (MCP) Server
+
+AuraMemory is equipped with a zero-dependency, high-performance **MCP JSON-RPC 2.0 Server** inside `core/gateway.py`. This gateway allows any standard AI agent client (such as Claude Desktop Co-work, Cursor, Hermes, or Claw Bot) to query and commit memories natively via standard `stdin/stdout` transport, completely running local code with zero external dependencies.
+
+### 🚀 Claude Desktop Configuration
+
+To natively connect Claude Desktop to AuraMemory, open your Claude Desktop configuration file:
+* **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+* **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+Add `auramemory` under the `mcpServers` registry (make sure to replace `/absolute/path/to` with the real absolute path to your repository):
+
+```json
+{
+  "mcpServers": {
+    "auramemory": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/AuraMemory/core/gateway.py"
+      ]
+    }
+  }
+}
+```
+
+Restart Claude Desktop, and the agent will automatically discover the following four native tools:
+1. `auramem_commit`: Commits a new memory, scrubbing PII and checking safety guardrails.
+2. `auramem_recall`: Queries the 8D KD-Tree sub-linear index using continuous vector similarity.
+3. `auramem_consolidate`: Decays Working Memory strength and promotes stable concepts to Long-Term Memory.
+4. `auramem_compress_context`: Retrieves matching memories and returns a token-capped, high-density prompt injection payload (the Token-Optimizer).
+
+### 🛠️ CLI Validation Harness
+
+Verify that your MCP setup is flawless by running the built-in mock client validator:
+```bash
+python3 core/gateway.py --validate
+```
+This executes mock JSON-RPC 2.0 handshake frames and tool calls, confirming correctness in milliseconds!
+
