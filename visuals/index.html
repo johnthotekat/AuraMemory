@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraMemory - Native Agentic AI Memory & Guardrails Visualizer</title>
+    
+    <!-- Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="stars-backdrop"></div>
+    <div class="glow-blob glow-1"></div>
+    <div class="glow-blob glow-2"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <span class="pulse-dot"></span>
+                <h1>AURA<span>MEMORY</span></h1>
+                <span class="badge">v1.0.0 NATIVE</span>
+            </div>
+            <p class="subtitle">Next-Gen Dual-System Cognitive AI Memory Engine with Real-Time Schema Guardrails</p>
+        </header>
+
+        <!-- Main Dashboard Layout -->
+        <main class="dashboard-grid">
+            
+            <!-- Left Column: Settings and GitHub Sync -->
+            <div class="dashboard-column">
+                
+                <!-- Left Panel: Guardrail Schema & Control -->
+                <section class="panel glass-panel guardrail-panel" id="panel-guardrail">
+                    <div class="panel-header">
+                        <span class="icon">🛡️</span>
+                        <h2>Guardrail Settings</h2>
+                    </div>
+                    
+                    <div class="panel-content">
+                        <div class="setting-group">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="guardrail-scrub-pii" checked>
+                                <span class="slider-toggle"></span>
+                                <span class="label-text">PII Safety Scrubbing</span>
+                            </label>
+                            <p class="setting-desc">Instantly scrubs out Email addresses, API Keys, Passwords, and Phone Numbers.</p>
+                        </div>
+
+                        <div class="setting-group">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="guardrail-blocked-topics" checked>
+                                <span class="slider-toggle"></span>
+                                <span class="label-text">Restrict Sensitive Topics</span>
+                            </label>
+                            <p class="setting-desc">Blocks read/write access to restricted categories (e.g. malware, hacking, insider-trading).</p>
+                        </div>
+
+                        <div class="setting-group">
+                            <label class="range-slider">
+                                <span class="slider-header">
+                                    <span class="slider-label">System 1 Decay Rate</span>
+                                    <span class="slider-val" id="decay-val">0.10</span>
+                                </span>
+                                <input type="range" id="param-decay" min="0.01" max="0.5" step="0.01" value="0.10">
+                            </label>
+                            <p class="setting-desc">How fast short-term memories fade per consolidation cycle if not reinforced.</p>
+                        </div>
+
+                        <div class="setting-group">
+                            <label class="range-slider">
+                                <span class="slider-header">
+                                    <span class="slider-label">Max Retrieval Depth</span>
+                                    <span class="slider-val" id="depth-val">8</span>
+                                </span>
+                                <input type="range" id="param-depth" min="3" max="15" step="1" value="8">
+                            </label>
+                            <p class="setting-desc">Limits memory retrieval depth to save context tokens and focus cognitive energy.</p>
+                        </div>
+
+                        <div class="setting-group inline-group">
+                            <div class="input-badge-list" id="blocked-keywords">
+                                <span class="keyword-tag">hacking <button class="close-tag-btn" onclick="removeKeyword('hacking')">×</button></span>
+                                <span class="keyword-tag">malware <button class="close-tag-btn" onclick="removeKeyword('malware')">×</button></span>
+                            </div>
+                            <div class="input-btn-row">
+                                <input type="text" id="new-keyword" placeholder="Add custom restricted word...">
+                                <button class="btn btn-secondary" onclick="addKeyword()">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Left Panel 2: GitHub Integration Hub -->
+                <section class="panel glass-panel github-panel" id="panel-github">
+                    <div class="panel-header">
+                        <span class="icon">🐙</span>
+                        <h2>GitHub Sync Hub</h2>
+                        <span class="git-status-badge status-pending" id="git-status-badge">READY TO SYNC</span>
+                    </div>
+                    
+                    <div class="panel-content">
+                        <div class="github-sync-stats">
+                            <div class="stat-row">
+                                <span class="stat-label">Active Branch</span>
+                                <span class="stat-val branch-val" id="git-branch-val">main</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Remote Origin</span>
+                                <span class="stat-val remote-val" id="git-remote-val">git@github.com:mindflow/AuraMemory.git</span>
+                            </div>
+                        </div>
+
+                        <div class="release-payload-area">
+                            <div class="field-header">
+                                <span>🚀 ACTIVE RELEASE NOTES</span>
+                                <button class="btn-text-copy" onclick="copyGitHubReleaseNotes()">📋 Copy Notes</button>
+                            </div>
+                            <textarea id="github-release-textarea" readonly placeholder="Compiling release details..."></textarea>
+                        </div>
+
+                        <div class="github-cli-helper">
+                            <div class="cli-header">
+                                <span>RUN LOCAL SYNC AGENT</span>
+                            </div>
+                            <div class="cli-body">
+                                <code id="cli-command-code">python3 github_pusher_agent.py</code>
+                                <button class="btn-cli-copy" onclick="copyCLICommand()">📋</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+
+            <!-- Center Panel: Cognitive 2D Graph Visualizer -->
+            <section class="panel glass-panel visualizer-panel" id="panel-canvas">
+                <div class="panel-header">
+                    <span class="icon">🧠</span>
+                    <h2>Cognitive Memory Graph</h2>
+                    <div class="legend">
+                        <span class="legend-item"><span class="legend-dot s1-dot"></span> System 1 (Working)</span>
+                        <span class="legend-item"><span class="legend-dot s2-dot"></span> System 2 (Long-Term)</span>
+                    </div>
+                </div>
+                
+                <div class="canvas-container">
+                    <canvas id="memory-canvas"></canvas>
+                    <div class="canvas-overlay" id="canvas-alert">
+                        <div class="alert-box">
+                            <span class="alert-icon">⚠️</span>
+                            <span class="alert-text">GUARDRAIL TRIGGERED: Restricted content blocked!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="canvas-actions">
+                    <button class="btn btn-primary btn-pulse" onclick="runConsolidationCycle()">⚙️ Trigger Consolidation & Decay</button>
+                    <button class="btn btn-danger" onclick="clearAllMemory()">🗑️ Clear Brain</button>
+                </div>
+            </section>
+
+            <!-- Right Panel: AI Interactive Simulator Terminal -->
+            <section class="panel glass-panel simulator-panel" id="panel-simulator">
+                <div class="panel-header">
+                    <span class="icon">🔌</span>
+                    <h2>AI Memory Sandbox</h2>
+                </div>
+
+                <div class="panel-content flex-column">
+                    <div class="sandbox-input-area">
+                        <div class="form-group">
+                            <label for="memory-input">Commit New Memory</label>
+                            <textarea id="memory-input" placeholder="Type a memory e.g., 'I am designing a viral AI agentic memory module for developers. My secret auth token is token_987654321.'"></textarea>
+                        </div>
+                        <div class="form-group-row">
+                            <div class="tags-input-wrapper">
+                                <label for="memory-tags">Tags (comma-separated)</label>
+                                <input type="text" id="memory-tags" placeholder="AI, AgenticMemory, Technical">
+                            </div>
+                            <div class="importance-input-wrapper">
+                                <label for="memory-importance">Importance</label>
+                                <select id="memory-importance">
+                                    <option value="0.3">Low (0.3)</option>
+                                    <option value="0.6" selected>Medium (0.6)</option>
+                                    <option value="0.9">High (0.9)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="btn-group-row">
+                            <button class="btn btn-success" onclick="commitNewMemory()">📥 Commit Memory</button>
+                            <button class="btn btn-secondary" onclick="recallMemoryQuery()">🔍 Recall Memories</button>
+                        </div>
+                    </div>
+
+                    <div class="terminal-log-area">
+                        <div class="terminal-header">
+                            <span>SYSTEM COGNITIVE LOGS</span>
+                            <button class="terminal-clear" onclick="clearLogs()">Clear</button>
+                        </div>
+                        <div class="terminal-body" id="terminal-output">
+                            <div class="log-line log-info">[SYSTEM] Engine online. Native cognitive brain initialized.</div>
+                            <div class="log-line log-info">[SYSTEM] System 1 short-term decay rate is active (0.10).</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Instagram Content Mockup Creator -->
+        <section class="instagram-creator-section panel glass-panel">
+            <div class="panel-header">
+                <span class="icon">📸</span>
+                <h2>Instagram Creator Studio (Social Media Kit)</h2>
+                <div class="post-selector-wrapper">
+                    <label for="post-select">Active Content Draft:</label>
+                    <select id="post-select" onchange="loadInstagramPost()">
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
+            </div>
+
+            <div class="instagram-split-layout">
+                <!-- Phone Mockup -->
+                <div class="instagram-phone-wrapper">
+                    <div class="phone-frame">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            <div class="ig-mock-header">
+                                <div class="ig-user-avatar">🧠</div>
+                                <div class="ig-user-info">
+                                    <span class="ig-username">mindflow_ai</span>
+                                    <span class="ig-location">AuraMemory Lab</span>
+                                </div>
+                                <span class="ig-options">•••</span>
+                            </div>
+                            
+                            <!-- Phone Carousel Slide Content -->
+                            <div class="ig-mock-media-area" id="ig-media-card">
+                                <div class="ig-carousel-slide">
+                                    <div class="ig-slide-badge" id="ig-slide-count">SLIDE 1/5</div>
+                                    <h3 id="ig-slide-headline">The AI Memory Lie 🧠</h3>
+                                    <p id="ig-slide-body">Everyone thinks AI agents remember things because of 'Vector Databases'. But middleware wrappers slow down agents and add unnecessary layers. Here is how we build NATIVE memory...</p>
+                                    <div class="ig-slide-footer">
+                                        <span>👉 SWIPE TO BUILD</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ig-mock-controls">
+                                <div class="ig-left-controls">
+                                    <span class="ig-icon">❤️</span>
+                                    <span class="ig-icon">💬</span>
+                                    <span class="ig-icon">✈️</span>
+                                </div>
+                                <div class="ig-carousel-indicators" id="ig-indicators">
+                                    <span class="indicator active"></span>
+                                    <span class="indicator"></span>
+                                    <span class="indicator"></span>
+                                </div>
+                                <span class="ig-icon ig-bookmark">🔖</span>
+                            </div>
+
+                            <div class="ig-mock-carousel-nav">
+                                <button class="btn btn-phone-nav" onclick="prevSlide()">◀ Prev Slide</button>
+                                <button class="btn btn-phone-nav" onclick="nextSlide()">Next Slide ▶</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Post Text Copier & Info -->
+                <div class="instagram-details-wrapper">
+                    <div class="details-card">
+                        <div class="detail-header">
+                            <span class="badge badge-purple" id="post-theme-badge">Educational Hook</span>
+                            <h3>Viral Copywriting Draft</h3>
+                        </div>
+                        
+                        <div class="copy-field">
+                            <div class="field-header">
+                                <span>HOOK & CAPTION COPY</span>
+                                <button class="btn btn-copy" onclick="copyCaptionText()">📋 Copy Text</button>
+                            </div>
+                            <textarea id="ig-caption-textarea" readonly></textarea>
+                        </div>
+
+                        <div class="tips-box">
+                            <h4>🔥 Content & Networking Strategy</h4>
+                            <ul>
+                                <li><strong>Filming Direction:</strong> Record a high-quality screen capture of this dashboard! Record yourself typing <code>'my password is 12345'</code>, watch the guardrails flash red, and zoom in on the Canvas graph showing nodes separating. That is the perfect <strong>viral hook!</strong></li>
+                                <li><strong>Monetization Pitch:</strong> Caption details explain that native cognitive memory solves AI speed issues. pitch this as a framework startup to raise venture funding.</li>
+                                <li><strong>Networking Call-to-action:</strong> Ask users to comment <code>'MEMORY'</code>. Automate a direct message sending them to your GitHub page, which generates high networking leads.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <footer class="app-footer">
+            <p>Created by Antigravity and Pair Programmed with Mindflow. Designed for absolute reach, networking, and engineering excellence.</p>
+        </footer>
+    </div>
+
+    <!-- Loaded JS -->
+    <script src="app.js"></script>
+</body>
+</html>
