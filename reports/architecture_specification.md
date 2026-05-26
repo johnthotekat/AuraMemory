@@ -77,12 +77,24 @@ This compression strategy guarantees that agents receive clean, high-relevance c
 
 ---
 
-## 🔮 Future Roadmap (Moving to Hybrid Neural Models)
+## 🔮 Future Roadmap & Andrej Karpathy "LLM Wiki" Integration
 
-To scale beyond Milestone A's rule-based centroid embeddings while preserving process safety and speed, we propose a **Hybrid Cognitive Architecture**:
+To scale beyond Milestone A's rule-based centroid embeddings and integrate cutting-edge agentic memory patterns, we propose two strategic architectural evolutions:
 
-1. **Local ONNX Runtime**: Package a highly compressed, distilled transformer model (like `all-MiniLM-L6-v2`, ~80MB) running via ONNX Runtime inside the process. This maintains 100% local operation while introducing true deep-learning context awareness.
-2. **Dynamic Vocabulary Injection**: Allow agents to dynamically "learn" new vocabulary concepts by parsing definitions from incoming interactions and projecting them onto the 8D concept dimensions on the fly.
+### 1. The Andrej Karpathy "LLM Wiki" compiled memory layer
+
+In April 2026, Andrej Karpathy introduced the concept of the **"LLM Wiki"**—a personal knowledge management pattern that shifts the paradigm from standard just-in-time (JIT) RAG to **ahead-of-time (AOT) knowledge compilation**. 
+* **The Concept**: Raw interactions, papers, and files are the "source code," and the LLM acts as a "compiler" that proactively synthesizes and structures them into a human-readable vault of local plain Markdown (`.md`) files (the "executable" or wiki) rather than raw databases.
+* **AuraMemory Implementation Integration**:
+  1. **Markdown Entity Vault**: We can configure AuraMemory's System 2 (Long-Term Memory) to serialize directly to a local, Obsidian-compatible folder of plain Markdown pages.
+  2. **8D Vector-to-Symbolic Link Bridge**: When two nodes have a cosine similarity $\ge 0.20$, the system automatically writes dynamic double-bracketed `[[wiki-links]]` directly inside the files. This maps continuous connectionist vector space distances to discrete symbolic web graphs!
+  3. **The AI Memory Linter (`auramem_lint`)**: Introduce a background agent daemon that audits the wiki files periodically, merging redundant pages, resolving factual contradictions via agentic reflection, and pruning unlinked orphan pages.
+
+### 2. Hybrid Neural Models & Embeddings
+
+* **Local ONNX Runtime**: Package a highly compressed, distilled transformer model (like `all-MiniLM-L6-v2`, ~80MB) running via ONNX Runtime inside the process. This maintains 100% local operation while introducing true deep-learning context awareness.
+* **Dynamic Vocabulary Injection**: Allow agents to dynamically "learn" new vocabulary concepts by parsing definitions from incoming interactions and projecting them onto the 8D concept dimensions on the fly.
+---
 ---
 ---
 ---
@@ -92,7 +104,7 @@ To scale beyond Milestone A's rule-based centroid embeddings while preserving pr
 
 ## 🧠 Live Cognitive Workspace Index
 
-*This section is compiled autonomously by the **AuraMemory Self-Reflective Git Pusher Agent** at `2026-05-27 03:22:55` using the local 8D Semantic Cosine Similarity engine.*
+*This section is compiled autonomously by the **AuraMemory Self-Reflective Git Pusher Agent** at `2026-05-27 03:27:58` using the local 8D Semantic Cosine Similarity engine.*
 
 ### 📊 Codebase Cognitive Map
 | Component Path | System | Importance | Strength | Primary Semantic Vector | Main Associations |
@@ -118,7 +130,7 @@ To scale beyond Milestone A's rule-based centroid embeddings while preserving pr
 | `reports/agentic_memory_report.md` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.72, 0.54, 0.02, 0.00...]` | `README.md` (0.90), `LICENSE` (0.89) |
 
 ### ⚖️ Automated Architectural Assessment
-* An analyzed volume of **19 active files** spanning **5663 lines of code** has been indexed into the memory space.
+* An analyzed volume of **19 active files** spanning **5679 lines of code** has been indexed into the memory space.
 
 #### 👍 The "Good" Tradeoffs
 - **Code Modularity**: Clean separation of concerns: core engine, frontend browser, reports, examples, and autonomous agents reside in distinct submodules.
