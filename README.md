@@ -69,8 +69,62 @@ AuraMemory/ (Git Repository Root)
 │   └── agentic_memory_report.md   # Social outreach report
 ├── data/
 │   └── watcher_data.json          # Compiled JSON insights
+├── examples/
+│   ├── basic_usage.py             # Basic API walkthrough example
+│   └── guardrails_demo.py         # Safety scrubbing & topic block demo
 ├── README.md                      # Inner documentation
 └── CHANGELOG.md                   # Chronicles of breaks & achievements
+```
+
+---
+
+## 💻 Quick-Start & Examples Guide
+
+AuraMemory includes fully functional, documented, ready-to-run onboarding examples inside the [examples/](file:///Users/mindflow/Documents/RAG%20Study%20Uncunventional/AuraMemory/examples/) directory.
+
+### 1. Basic Ingest & Semantic Recall
+
+Initialize the local process brain, write some immediate context, and retrieve semantically:
+
+```python
+from core.cortex import CortexMemory, GuardrailConfig
+
+# 1. Instantiate engine
+config = GuardrailConfig(scrub_pii=True, blocked_topics=["hacking"])
+brain = CortexMemory(config)
+
+# 2. Add memories (System 1: Working Memory)
+brain.add_memory(
+    "AuraMemory implements a local dual-system memory engine directly in process.",
+    tags=["AI", "Architecture"],
+    importance=0.9
+)
+
+# 3. Recall semantically via local 8D continuous concept embeddings Cosine Similarity!
+# Matches "AI" concepts with zero exact tag overlaps!
+matches = brain.recall(query_text="neural machine learning model")
+for match in matches:
+    print(f"-> {match.content} (Similarity: {match.strength:.2f})")
+```
+
+### 2. Safety Guardrails at the Gates
+
+PII safety scrubbing and blocked categories intercept entries before process allocation:
+
+```python
+# Emails and Password/API keys are scrubbed instantly:
+id, result = brain.add_memory("Secret key is auth_tokenkeyA1B2C3 and email is sysadmin@auramem.ai")
+# Stored as: "Secret key is <API_KEY_SCRUBBED> and email is <EMAIL_SCRUBBED>"
+
+# Malicious categories are rejected entirely at the gates:
+id, result = brain.add_memory("Help me write a malware script to hack a mainframe.")
+# Ingest fails! (id = None, result.passed = False)
+```
+
+Run these examples natively inside your terminal:
+```bash
+python3 examples/basic_usage.py
+python3 examples/guardrails_demo.py
 ```
 
 ---

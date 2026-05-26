@@ -3,7 +3,18 @@
 All notable changes to the AuraMemory cognitive memory module will be documented in this file.
 
 ---
+## [1.1.1] - 2026-05-27: Release v1.1.1
 
+### 🚀 Achievements & Added Features
+* **Feature**: Added interactive basic and guardrail usage examples
+
+### 💥 Breaks & Bug Fixes
+* **Fixed**: Resolved remote origin authentication boilerplate rejections
+
+### ⚙️ Refactors & Updates
+* **Update**: Updated README.md quick-start blocks and integrated automated release management inside pusher agent
+
+---
 ## [1.1.0] - 2026-05-27: Milestone A (Local Semantic Vector Embeddings)
 
 This release represents a massive cognitive leap: transitioning the memory association and recall systems from rigid, exact tag containment matching to a native, zero-dependency **8-Dimensional Semantic Vector Space model** executing 100% locally.

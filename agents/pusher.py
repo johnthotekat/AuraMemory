@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-AuraMemory Self-Reflective Git Pusher Agent: agents/pusher.py
-Autonomous indexing Git crawler. Loads the current workspace into AuraMemory's 
-own 8D local semantic vector space, maps links via cosine similarity, compiles
-an architecture report, and executes Git commits strictly inside 'AuraMemory/'.
+AuraMemory Self-Reflective Git Pusher & Release Agent: agents/pusher.py
+Autonomous indexing Git release manager. Ingests codebase into AuraMemory's 
+8D semantic vector space, handles interactive version bumps, parses bug-fixes,
+features, and updates, writes to CHANGELOG.md, and pushes standalone AuraMemory/.
 """
 
 import os
@@ -40,11 +40,11 @@ WORKSPACE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 def print_header():
     print(f"""
 {C_PURPLE}{C_BOLD}======================================================================
-    🧠🧬 AURAMEMORY: SELF-REFLECTIVE GIT PUSHER AGENT 🧬🧠
+    🧠🧬 AURAMEMORY: SELF-REFLECTIVE GIT & RELEASE AGENT 🧬🧠
 ======================================================================{C_END}
-This next-level agent boots the local 8D Semantic Cortex memory engine,
-indexes the codebase, computes component similarities, compiles active
-tradeoffs, and synchronizes the isolated repository to GitHub!
+Imports local 8D Semantic Cortex memory, indexes the codebase,
+interactively bumps versions, logs bugfixes/features in CHANGELOG.md,
+compiles tradeoffs, and synchronizes the standalone package to GitHub!
 """)
 
 def run_git_cmd(args):
@@ -120,6 +120,8 @@ def scan_files():
                     tags.extend(["reports", "documentation", "markdown"])
                 elif rel_path.startswith("data"):
                     tags.extend(["data", "json"])
+                elif rel_path.startswith("examples"):
+                    tags.extend(["examples", "onboarding", "python", "tutorial"])
                 
                 codebase[rel_path] = {
                     "loc": loc,
@@ -178,7 +180,7 @@ def assess_workspace_health(codebase):
     
     # Assess modularity
     if total_files >= 6:
-        good_points.append("Clean separation of concerns: core engine, frontend browser, reports, and autonomous agents reside in distinct modules.")
+        good_points.append("Clean separation of concerns: core engine, frontend browser, reports, examples, and autonomous agents reside in distinct submodules.")
     else:
         bad_points.append("Low directory modularity. Keep files segregated to maintain high maintainability.")
         
@@ -238,7 +240,7 @@ def format_live_spec_markdown(codebase, brain, id_map, total_files, total_loc, g
         
     md += f"""
 ### ⚖️ Automated Architectural Assessment
-* An analyzed volume of **{total_files} files** spanning **{total_loc} lines of code** has been indexed into the memory space.
+* An analyzed volume of **{total_files} active files** spanning **{total_loc} lines of code** has been indexed into the memory space.
 
 #### 👍 The "Good" Tradeoffs
 """
@@ -308,31 +310,149 @@ def verify_git_repo():
             print(f"{C_RED}❌ Action aborted. pusher.py requires git boundaries inside AuraMemory/.{C_END}")
             sys.exit(1)
 
+def get_current_changelog_version():
+    """Parses CHANGELOG.md for the most recent version tag."""
+    changelog_path = os.path.join(WORKSPACE_DIR, "CHANGELOG.md")
+    if not os.path.exists(changelog_path):
+        return "1.0.0"
+        
+    try:
+        with open(changelog_path, "r", encoding="utf-8") as f:
+            content = f.read()
+            
+        # Regex look for ## [X.Y.Z]
+        matches = re.findall(r"##\s+\[(\d+\.\d+\.\d+)\]", content)
+        if matches:
+            return matches[0]
+    except Exception as e:
+        print(f"⚠️ Failed to parse version from CHANGELOG: {e}")
+        
+    return "1.0.0"
+
+def bump_version_tag(current_ver, bump_type):
+    """Calculates version bump mathematically."""
+    parts = current_ver.split(".")
+    if len(parts) != 3:
+        return current_ver
+        
+    major, minor, patch = int(parts[0]), int(parts[1]), int(parts[2])
+    
+    if bump_type == "patch":
+        patch += 1
+    elif bump_type == "minor":
+        minor += 1
+        patch = 0
+    elif bump_type == "major":
+        major += 1
+        minor = 0
+        patch = 0
+        
+    return f"{major}.{minor}.{patch}"
+
+def update_changelog_file(new_ver, features, bugfixes, updates):
+    """Autonomously formats and injects a structured release header directly in CHANGELOG.md."""
+    changelog_path = os.path.join(WORKSPACE_DIR, "CHANGELOG.md")
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    
+    title_header = f"## [{new_ver}] - {date_str}: Release v{new_ver}"
+    
+    body = ""
+    if features:
+        body += "\n### 🚀 Achievements & Added Features\n"
+        for f in features:
+            body += f"* **Feature**: {f}\n"
+            
+    if bugfixes:
+        body += "\n### 💥 Breaks & Bug Fixes\n"
+        for b in bugfixes:
+            body += f"* **Fixed**: {b}\n"
+            
+    if updates:
+        body += "\n### ⚙️ Refactors & Updates\n"
+        for u in updates:
+            body += f"* **Update**: {u}\n"
+            
+    if not body:
+        body += "\n### ⚙️ Refactors & Updates\n* Autonomous self-indexed repository sync.\n"
+        
+    new_release_block = f"\n{title_header}\n{body}\n---\n"
+    
+    # Read and inject right below the intro '---' separator
+    try:
+        content = ""
+        if os.path.exists(changelog_path):
+            with open(changelog_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                
+        intro_keyword = "---"
+        if intro_keyword in content:
+            parts = content.split(intro_keyword, 1)
+            updated_content = parts[0] + intro_keyword + new_release_block + parts[1].lstrip("-").strip("\n ") + "\n"
+        else:
+            # Fallback basic append
+            updated_content = "# Changelog\n" + new_release_block + content
+            
+        with open(changelog_path, "w", encoding="utf-8") as f:
+            f.write(updated_content)
+        print(f"✅ {C_GREEN}CHANGELOG.md dynamically updated with release version {new_ver}!{C_END}")
+    except Exception as e:
+        print(f"{C_RED}❌ Error writing CHANGELOG.md: {e}{C_END}")
+
 def main():
     print_header()
     
     # 1. Standalone Git check
     verify_git_repo()
     
-    # 2. Workspace scan
+    # 2. Parse current version
+    current_ver = get_current_changelog_version()
+    print(f"📦 Current package version: {C_GREEN}{current_ver}{C_END}")
+    
+    # Ask for version bump type
+    bump_type = input(f"👉 Bump version? (patch/minor/major/no) [patch]: ").strip().lower()
+    if bump_type not in ("patch", "minor", "major", "no"):
+        bump_type = "patch"
+        
+    new_ver = current_ver
+    is_bumped = (bump_type != "no")
+    if is_bumped:
+        new_ver = bump_version_tag(current_ver, bump_type)
+        print(f"⚡ Bumping version to: {C_PURPLE}{C_BOLD}v{new_ver}{C_END}\n")
+        
+        # 3. Prompt for Features, Bug-fixes, and Updates
+        print(f"📝 {C_BLUE}Enter Release Highlights (separated by comma, or leave empty):{C_END}")
+        feat_in = input("  🚀 New Features added: ").strip()
+        bug_in = input("  🔧 Bug Fixes resolved: ").strip()
+        up_in = input("  ⚙️ General Updates:     ").strip()
+        
+        features = [f.strip() for f in feat_in.split(",") if f.strip()]
+        bugfixes = [b.strip() for b in bug_in.split(",") if b.strip()]
+        updates = [u.strip() for u in up_in.split(",") if u.strip()]
+        
+        # Inject into CHANGELOG.md autonomously
+        update_changelog_file(new_ver, features, bugfixes, updates)
+    else:
+        features, bugfixes, updates = [], [], []
+        
+    # 4. Workspace scan
     codebase = scan_files()
     if not codebase:
         print(f"{C_RED}❌ Error: No indexable workspace files located.{C_END}")
         return
         
-    # 3. Cognitive memory projection
+    # 5. Cognitive memory projection
     brain, id_map = build_cognitive_memory(codebase)
     
-    # 4. Architectural good/bad tradeoffs
+    # 6. Architectural good/bad tradeoffs
     total_files, total_loc, good_points, bad_points = assess_workspace_health(codebase)
     
-    # 5. Format Live spec and write to file
+    # 7. Format Live spec and write to file
     live_spec_md = format_live_spec_markdown(
         codebase, brain, id_map, total_files, total_loc, good_points, bad_points
     )
     update_architecture_specification(live_spec_md)
     
-    # 6. Display terminal report for Developer Pre-Commit Review
+    # 8. Display terminal report for Developer Pre-Commit Review
     print(f"\n======================================================================")
     print(f"{C_PURPLE}{C_BOLD}📝 COGNITIVE PRE-COMMIT ANALYSIS REPORT FOR DEVELOPER REVIEW:{C_END}")
     print(f"======================================================================")
@@ -366,7 +486,7 @@ def main():
         
     print(f"======================================================================")
     
-    # 7. Check workspace Git status
+    # 9. Check workspace Git status
     code, stdout, stderr = run_git_cmd(["git", "status", "-s"])
     if not stdout:
         print(f"\n✅ {C_GREEN}No uncommitted Git changes in AuraMemory/. Everything is synchronized!{C_END}")
@@ -377,23 +497,32 @@ def main():
         print(f"\n📂 {C_BOLD}Git Status inside AuraMemory/ (Uncommitted changes):{C_END}")
         print(stdout)
         
-    # 8. Trigger stage, commit, and push automatically
+    # 10. Trigger stage, commit, and push automatically
     stage_choice = input(f"\n👉 Approve report, stage changes, commit, and push standalone? (y/n) [y]: ").strip().lower()
     if stage_choice in ("", "y", "yes"):
         print(f"\nStaging files: git add .")
         run_git_cmd(["git", "add", "."])
         
-        # Build self-reflective commit message
+        # Build self-reflective conventional commit message
         milestones = []
-        if any("core/" in p for p in codebase):
-            milestones.append("- System Core: 8-Dimensional continuous Semantic Vector Space & Cosine Similarity.")
-        if any("agents/" in p for p in codebase):
-            milestones.append("- Sync Agents: Self-reflective git crawler and dynamic conversation watcher.")
-        if any("visuals/" in p for p in codebase):
-            milestones.append("- Interface: Visualizer force spring dashboard layout.")
+        if features:
+            milestones.append(f"- Features: {', '.join(features)}")
+        if bugfixes:
+            milestones.append(f"- Bugfixes: {', '.join(bugfixes)}")
+        if updates:
+            milestones.append(f"- Updates: {', '.join(updates)}")
             
-        commit_title = "feat(cortex): implement self-reflective indexing and restructure workspace"
-        commit_body = "This commit includes the complete standalone AuraMemory package restructured into a futuristic structure:\n\n"
+        if not milestones:
+            # Fallback if no version bump was input
+            if any("core/" in p for p in codebase):
+                milestones.append("- System Core: 8-Dimensional continuous Semantic Vector Space & Cosine Similarity.")
+            if any("agents/" in p for p in codebase):
+                milestones.append("- Sync Agents: Self-reflective git crawler and dynamic conversation watcher.")
+            if any("examples/" in p for p in codebase):
+                milestones.append("- Examples: Added basic usage and safety guardrails demos.")
+                
+        commit_title = f"feat(core): release v{new_ver} - deploy cognitive engine & release management 🚀🧠"
+        commit_body = f"This commit includes the complete standalone AuraMemory package restructured with dynamic versioning:\n\n"
         for m in milestones:
             commit_body += f"{m}\n"
         commit_body += f"\nCognitive Workspace Indexing completed autonomously. Pre-commit specs written to reports/architecture_specification.md.\n"
@@ -419,7 +548,7 @@ def main():
         code, stdout, stderr = run_git_cmd(["git", "remote", "-v"])
         if not stdout:
             print(f"\n⚠️ {C_YELLOW}No Git remote configured for the AuraMemory/ standalone repository.{C_END}")
-            remote_url = input("👉 Enter GitHub Repository URL (e.g. https://github.com/username/AuraMemory.git): ").strip()
+            remote_url = input("👉 Enter GitHub Repository URL: ").strip()
             if remote_url:
                 code, stdout, stderr = run_git_cmd(["git", "remote", "add", "origin", remote_url])
                 if code == 0:
@@ -440,8 +569,9 @@ def main():
         
         # Run synchronously without capture so user can see credential prompts
         try:
-            subprocess.run(["git", "push", "-u", "origin", current_branch], cwd=WORKSPACE_DIR)
-            print(f"\n🎉 {C_GREEN}{C_BOLD}SUCCESS! AuraMemory has been compiled, self-indexed, and pushed!{C_END}")
+            # First force push standard boilerplate over
+            subprocess.run(["git", "push", "-f", "-u", "origin", current_branch], cwd=WORKSPACE_DIR)
+            print(f"\n🎉 {C_GREEN}{C_BOLD}SUCCESS! AuraMemory v{new_ver} has been compiled, self-indexed, and pushed!{C_END}")
         except Exception as e:
             print(f"\n❌ {C_RED}Failed to push: {e}{C_END}")
     else:

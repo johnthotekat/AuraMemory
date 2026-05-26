@@ -62,34 +62,37 @@ To scale beyond Milestone A's rule-based centroid embeddings while preserving pr
 2. **Dynamic Vocabulary Injection**: Allow agents to dynamically "learn" new vocabulary concepts by parsing definitions from incoming interactions and projecting them onto the 8D concept dimensions on the fly.
 ---
 ---
+---
 
 ## 🧠 Live Cognitive Workspace Index
 
-*This section is compiled autonomously by the **AuraMemory Self-Reflective Git Pusher Agent** at `2026-05-27 02:39:30` using the local 8D Semantic Cosine Similarity engine.*
+*This section is compiled autonomously by the **AuraMemory Self-Reflective Git Pusher Agent** at `2026-05-27 02:50:12` using the local 8D Semantic Cosine Similarity engine.*
 
 ### 📊 Codebase Cognitive Map
 | Component Path | System | Importance | Strength | Primary Semantic Vector | Main Associations |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `LICENSE` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.62, 0.62, 0.03, 0.00...]` | `CHANGELOG.md` (0.90), `README.md` (0.90) |
-| `CHANGELOG.md` | 🔵 System 1 (Working) | 0.65 | 0.99 | `[0.62, 0.62, 0.03, 0.00...]` | `LICENSE` (0.90), `README.md` (0.90) |
-| `README.md` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.62, 0.62, 0.03, 0.00...]` | `LICENSE` (0.90), `CHANGELOG.md` (0.90) |
+| `LICENSE` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.62, 0.62, 0.03, 0.00...]` | `CHANGELOG.md` (0.90), `architecture_specification.md` (0.90) |
+| `CHANGELOG.md` | 🔵 System 1 (Working) | 0.65 | 0.99 | `[0.62, 0.62, 0.03, 0.00...]` | `LICENSE` (0.90), `architecture_specification.md` (0.90) |
+| `README.md` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.71, 0.57, 0.02, 0.00...]` | `agentic_memory_report.md` (0.90), `architecture_specification.md` (0.89) |
 | `core/cortex.py` | 🔵 System 1 (Working) | 0.95 | 0.99 | `[0.26, 0.80, 0.14, 0.01...]` | `watcher_data.json` (0.89), `__init__.py` (0.89) |
 | `core/__init__.py` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.18, 0.81, 0.04, 0.00...]` | `cortex.py` (0.89), `watcher_data.json` (0.88) |
 | `agents/pusher.py` | 🔵 System 1 (Working) | 0.85 | 0.99 | `[0.57, 0.58, 0.00, 0.00...]` | `watcher.py` (0.90), `__init__.py` (0.90) |
 | `agents/__init__.py` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.54, 0.54, 0.01, 0.00...]` | `watcher.py` (0.90), `pusher.py` (0.90) |
 | `agents/watcher.py` | 🔵 System 1 (Working) | 0.85 | 0.99 | `[0.56, 0.55, 0.01, 0.00...]` | `pusher.py` (0.90), `__init__.py` (0.90) |
+| `examples/guardrails_demo.py` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.39, 0.66, 0.06, 0.01...]` | `basic_usage.py` (0.90), `__init__.py` (0.88) |
+| `examples/basic_usage.py` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.39, 0.66, 0.01, 0.00...]` | `guardrails_demo.py` (0.90), `__init__.py` (0.88) |
 | `visuals/index.html` | 🔵 System 1 (Working) | 0.80 | 0.99 | `[0.41, 0.57, 0.02, 0.00...]` | `index.css` (0.90), `app.js` (0.89) |
 | `visuals/index.css` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.41, 0.57, 0.02, 0.00...]` | `index.html` (0.90), `app.js` (0.89) |
 | `visuals/app.js` | 🔵 System 1 (Working) | 0.80 | 0.99 | `[0.30, 0.56, 0.06, 0.00...]` | `index.html` (0.89), `index.css` (0.89) |
 | `data/watcher_data.json` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.34, 0.80, 0.07, 0.00...]` | `cortex.py` (0.89), `__init__.py` (0.88) |
 | `reports/architecture_specification.md` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.62, 0.65, 0.01, 0.00...]` | `LICENSE` (0.90), `CHANGELOG.md` (0.90) |
-| `reports/agentic_memory_report.md` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.72, 0.54, 0.02, 0.00...]` | `LICENSE` (0.89), `CHANGELOG.md` (0.89) |
+| `reports/agentic_memory_report.md` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.72, 0.54, 0.02, 0.00...]` | `README.md` (0.90), `LICENSE` (0.89) |
 
 ### ⚖️ Automated Architectural Assessment
-* An analyzed volume of **14 files** spanning **4430 lines of code** has been indexed into the memory space.
+* An analyzed volume of **16 active files** spanning **4786 lines of code** has been indexed into the memory space.
 
 #### 👍 The "Good" Tradeoffs
-- **Code Modularity**: Clean separation of concerns: core engine, frontend browser, reports, and autonomous agents reside in distinct modules.
+- **Code Modularity**: Clean separation of concerns: core engine, frontend browser, reports, examples, and autonomous agents reside in distinct submodules.
 - **Code Modularity**: core/cortex.py size is highly optimized, keeping local concept vectors processing in < 0.1ms inside process threads.
 
 #### ⚠️ The "Bad" Warnings
