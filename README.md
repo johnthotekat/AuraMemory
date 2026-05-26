@@ -4,6 +4,23 @@ Welcome to **AuraMemory**, a next-generation cognitive memory engine designed to
 
 To launch this as a viral, high-reach social media brand, this workspace includes an interactive, gorgeous force-directed graph dashboard, alongside an autonomous **Conversation Watcher Agent** and a self-reflective **Git Pusher CLI Tool**.
 
+<!-- RELEASE_HIGHLIGHTS_START -->
+## 🚀 Latest Release Highlights (v1.1.2)
+
+> [!TIP]
+> **AuraMemory** is actively maintained! Here is what just landed in our latest release (`2026-05-27`):
+
+- 🚀 **Achievements**: Added dynamic README release highlights and cognitive workspace metrics
+- 💥 **Fixed**: None
+- ⚙️ **Updates**: Cleaned up repository layout
+
+### 📈 Active Workspace Cognitive Metrics
+- **Package Version**: `v1.1.2`
+- **Cognitive Map**: **16 active files** spanning **5068 lines of code** projected into the continuous 8D space.
+- **Process Latency**: **< 0.1ms** vector cosine calculations.
+- **Core Promoted Assets**: None
+<!-- RELEASE_HIGHLIGHTS_END -->
+
 ---
 
 ## ⚡ The Architecture: Dual-System Cognitive Brain

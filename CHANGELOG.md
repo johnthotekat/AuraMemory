@@ -3,6 +3,18 @@
 All notable changes to the AuraMemory cognitive memory module will be documented in this file.
 
 ---
+## [1.1.2] - 2026-05-27: Release v1.1.2
+
+### 🚀 Achievements & Added Features
+* **Feature**: Added dynamic README release highlights and cognitive workspace metrics
+
+### 💥 Breaks & Bug Fixes
+* **Fixed**: None
+
+### ⚙️ Refactors & Updates
+* **Update**: Cleaned up repository layout
+
+---
 ## [1.1.1] - 2026-05-27: Release v1.1.1
 
 ### 🚀 Achievements & Added Features

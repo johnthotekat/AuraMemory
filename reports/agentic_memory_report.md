@@ -14,6 +14,7 @@ In this session, we initiated the development of AuraMemory, a native agentic AI
 - **System Core**: Created cortex_memory.py containing the dual-system memory engine.
 - **System Core**: Created cortex_memory.py containing the dual-system memory engine.
 - **Visual Interface**: Created index.html for interactive simulation and presentation.
+- **System Core**: Created cortex_memory.py containing the dual-system memory engine.
 
 ## 2. Future Advances in Agentic Memory
 
