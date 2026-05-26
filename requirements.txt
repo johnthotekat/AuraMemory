@@ -1,0 +1,5 @@
+# AuraMemory Package Dependency Registry
+# Out-of-the-box, AuraMemory runs 100% locally with zero external dependencies!
+#
+# Any future python packages added here will be automatically installed
+# when running the local "./update.sh" synchronizer command.

@@ -88,17 +88,20 @@ To scale beyond Milestone A's rule-based centroid embeddings while preserving pr
 ---
 ---
 ---
+---
 
 ## 🧠 Live Cognitive Workspace Index
 
-*This section is compiled autonomously by the **AuraMemory Self-Reflective Git Pusher Agent** at `2026-05-27 03:16:34` using the local 8D Semantic Cosine Similarity engine.*
+*This section is compiled autonomously by the **AuraMemory Self-Reflective Git Pusher Agent** at `2026-05-27 03:22:55` using the local 8D Semantic Cosine Similarity engine.*
 
 ### 📊 Codebase Cognitive Map
 | Component Path | System | Importance | Strength | Primary Semantic Vector | Main Associations |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `LICENSE` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.62, 0.62, 0.03, 0.00...]` | `CHANGELOG.md` (0.90), `architecture_specification.md` (0.90) |
-| `CHANGELOG.md` | 🔵 System 1 (Working) | 0.65 | 0.99 | `[0.62, 0.62, 0.03, 0.00...]` | `LICENSE` (0.90), `architecture_specification.md` (0.90) |
+| `LICENSE` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.62, 0.62, 0.03, 0.00...]` | `requirements.txt` (0.90), `CHANGELOG.md` (0.90) |
+| `requirements.txt` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.62, 0.62, 0.03, 0.00...]` | `LICENSE` (0.90), `CHANGELOG.md` (0.90) |
+| `CHANGELOG.md` | 🔵 System 1 (Working) | 0.65 | 0.99 | `[0.62, 0.62, 0.03, 0.00...]` | `LICENSE` (0.90), `requirements.txt` (0.90) |
 | `README.md` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.71, 0.57, 0.02, 0.00...]` | `agentic_memory_report.md` (0.90), `architecture_specification.md` (0.89) |
+| `update.sh` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.62, 0.62, 0.03, 0.00...]` | `LICENSE` (0.90), `requirements.txt` (0.90) |
 | `core/gateway.py` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.26, 0.81, 0.03, 0.00...]` | `__init__.py` (0.90), `cortex.py` (0.89) |
 | `core/cortex.py` | 🔵 System 1 (Working) | 0.95 | 0.99 | `[0.26, 0.80, 0.14, 0.01...]` | `gateway.py` (0.89), `watcher_data.json` (0.89) |
 | `core/__init__.py` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.18, 0.81, 0.04, 0.00...]` | `gateway.py` (0.90), `cortex.py` (0.89) |
@@ -111,11 +114,11 @@ To scale beyond Milestone A's rule-based centroid embeddings while preserving pr
 | `visuals/index.css` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.41, 0.57, 0.02, 0.00...]` | `index.html` (0.90), `app.js` (0.89) |
 | `visuals/app.js` | 🔵 System 1 (Working) | 0.80 | 0.99 | `[0.30, 0.56, 0.06, 0.00...]` | `index.html` (0.89), `index.css` (0.89) |
 | `data/watcher_data.json` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.34, 0.80, 0.07, 0.00...]` | `gateway.py` (0.89), `cortex.py` (0.89) |
-| `reports/architecture_specification.md` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.62, 0.65, 0.01, 0.00...]` | `LICENSE` (0.90), `CHANGELOG.md` (0.90) |
+| `reports/architecture_specification.md` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.62, 0.65, 0.01, 0.00...]` | `LICENSE` (0.90), `requirements.txt` (0.90) |
 | `reports/agentic_memory_report.md` | 🔵 System 1 (Working) | 0.50 | 0.99 | `[0.72, 0.54, 0.02, 0.00...]` | `README.md` (0.90), `LICENSE` (0.89) |
 
 ### ⚖️ Automated Architectural Assessment
-* An analyzed volume of **17 active files** spanning **5543 lines of code** has been indexed into the memory space.
+* An analyzed volume of **19 active files** spanning **5663 lines of code** has been indexed into the memory space.
 
 #### 👍 The "Good" Tradeoffs
 - **Code Modularity**: Clean separation of concerns: core engine, frontend browser, reports, examples, and autonomous agents reside in distinct submodules.

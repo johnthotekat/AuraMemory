@@ -3,6 +3,18 @@
 All notable changes to the AuraMemory cognitive memory module will be documented in this file.
 
 ---
+## [1.1.4] - 2026-05-27: Release v1.1.4
+
+### 🚀 Achievements & Added Features
+* **Feature**: Added autonomous zero-overhead update manager and package dependency registry
+
+### 💥 Breaks & Bug Fixes
+* **Fixed**: None
+
+### ⚙️ Refactors & Updates
+* **Update**: Documented MCP gateways and quick-start guides in README
+
+---
 ## [1.1.3] - 2026-05-27: Release v1.1.3
 
 ### 🚀 Achievements & Added Features

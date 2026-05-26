@@ -5,18 +5,18 @@ Welcome to **AuraMemory**, a next-generation cognitive memory engine designed to
 To launch this as a viral, high-reach social media brand, this workspace includes an interactive, gorgeous force-directed graph dashboard, alongside an autonomous **Conversation Watcher Agent** and a self-reflective **Git Pusher CLI Tool**.
 
 <!-- RELEASE_HIGHLIGHTS_START -->
-## 🚀 Latest Release Highlights (v1.1.3)
+## 🚀 Latest Release Highlights (v1.1.4)
 
 > [!TIP]
 > **AuraMemory** is actively maintained! Here is what just landed in our latest release (`2026-05-27`):
 
-- 🚀 **Achievements**: Universal MCP Context Gateway, Token-Compressed Context Optimizer
+- 🚀 **Achievements**: Added autonomous zero-overhead update manager and package dependency registry
 - 💥 **Fixed**: None
-- ⚙️ **Updates**: Added detailed configuration steps to README and specification documents
+- ⚙️ **Updates**: Documented MCP gateways and quick-start guides in README
 
 ### 📈 Active Workspace Cognitive Metrics
-- **Package Version**: `v1.1.3`
-- **Cognitive Map**: **17 active files** spanning **5543 lines of code** projected into the continuous 8D space.
+- **Package Version**: `v1.1.4`
+- **Cognitive Map**: **19 active files** spanning **5663 lines of code** projected into the continuous 8D space.
 - **Process Latency**: **< 0.1ms** vector cosine calculations.
 - **Core Promoted Assets**: None
 <!-- RELEASE_HIGHLIGHTS_END -->
@@ -158,6 +158,12 @@ You want to monetize this and attract networking and venture capital (VC) invest
 ---
 
 ## 🚀 Running the Project Locally
+
+### 0. Initialize & Auto-Sync Workspace
+Keep your cloned codebase perfectly updated from GitHub with **zero-installation overheads**. This command automatically pulls the latest releases, sets up an isolated Python virtual environment (`.venv`), installs/upgrades any package dependencies in `requirements.txt`, and validates your system handshakes:
+```bash
+./update.sh
+```
 
 ### 1. Execute Self-Tests & Verify python engine
 Run unit test suites on the core cognitive engine, including semantic similarity checks:
