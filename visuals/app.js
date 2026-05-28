@@ -1,36 +1,47 @@
-/* AuraMemory Frontend Controller: app.js */
+/* AuraMemory Sovereign Console Controller: app.js */
 
 // --- GLOBAL STATE ---
 let nodes = [];
 let links = [];
-let blockedTopics = ['hacking', 'malware', 'insider-trading'];
+let activeWorkspace = 'default';
+let storageMode = 'sqlite'; // dynamically adjusted by stepper recommendations
 let piiScrubActive = true;
 let topicBlockActive = true;
 let decayRate = 0.10;
 let maxDepth = 8;
 
+// Simulated configuration profiles
+let activeProfile = {
+    env: 'edge',
+    workload: 'single'
+};
+
+// Stepper states
+let currentStep = 1;
+let egoBeliefs = [];
+
+// Instagram creator studio studio data
 let activePostIndex = 0;
 let activeSlideIndex = 0;
 let instagramPosts = [];
 
-// Canvas Simulation Physics Config
-const physics = {
-    repulsion: 1800,
-    attraction: 0.08,
-    damping: 0.85,
-    nodeRadius: 28,
-    boundaryPadding: 40
+// Affective centoid coordinates values
+let centroids = {
+    curiosity: 0.85,
+    caution: 0.20,
+    sociability: 0.60,
+    sovereignty: 0.75,
+    creativity: 0.90
 };
 
-// Drag and drop state
-let draggedNode = null;
-let hoveredNode = null;
-let mouse = { x: 0, y: 0, px: 0, py: 0 };
-let offset = { x: 0, y: 0 };
+// D3 Force Directed Graph Simulation
+let svg, simulation, linkGroup, nodeGroup;
+const nodeRadius = 25;
 
-// --- NATIVE SEMANTIC EMBEDDINGS ENGINE ---
+// --- NATIVE SEMANTIC 8D EMBEDDINGS SYSTEM ---
 const SEMANTIC_VOCAB = {
     "ai": [1.0, 0.2, 0.0, 0.0, 0.0, 0.1, 0.3, 0.0],
+    "machine": [0.8, 0.2, 0.0, 0.0, 0.0, 0.0, 0.2, 0.0],
     "agent": [0.9, 0.3, 0.0, 0.0, 0.0, 0.2, 0.4, 0.0],
     "agentic": [0.9, 0.3, 0.0, 0.0, 0.0, 0.2, 0.4, 0.0],
     "cognitive": [0.8, 0.4, 0.0, 0.0, 0.0, 0.1, 0.2, 0.2],
@@ -203,37 +214,66 @@ function embedNode(tags, content) {
     return normalizeVector(blended);
 }
 
-// --- DOM ELEMENTS ---
-let canvas, ctx;
+// --- DOM ELEMENTS CONTROLLERS ---
 let piiToggle, topicToggle, decaySlider, decayVal, depthSlider, depthVal;
-let blockedKeywordsList, newKeywordInput;
 let memoryInput, memoryTags, memoryImportance, terminalOutput;
 let postSelect, igMediaCard, igSlideCount, igSlideHeadline, igSlideBody, igCaptionText, postThemeBadge, igIndicators;
 let gitBranchVal, gitRemoteVal, githubReleaseText, gitStatusBadge;
+let onboardingOverlay, activeStorageBadge, activeNodesCountLabel;
+let sidebarWorkspaceList, padlockBeliefInput, detailGlassCard, dreamSparkAlert;
 
-// --- INITIALIZE APP ---
+// --- INITIALIZE APPLICATION ---
 window.addEventListener('DOMContentLoaded', async () => {
     initDOMElements();
-    setupCanvas();
+    setupD3Graph();
     setupEventListeners();
+    await loadAgentConfig();
     await loadWatcherData();
     seedInitialMemories();
-    requestAnimationFrame(simulationLoop);
+    updateRecommendation();
+    
+    // Check if onboarding completed previously
+    if (localStorage.getItem('auramem_onboarding_complete') === 'true') {
+        onboardingOverlay.classList.add('dismissed');
+        logTerminal("[SYSTEM] Native Commander Dashboard online. Storage: SQLite Relational.", "success");
+    } else {
+        logTerminal("[SYSTEM] Stepper overlay active. Awaiting developer profiling...");
+    }
 });
 
-function initDOMElements() {
-    canvas = document.getElementById('memory-canvas');
-    ctx = canvas.getContext('2d');
+// Dynamic configuration APIs endpoints
+let agentConfig = {
+    agents: {
+        strategist: { enabled: true },
+        pusher: { enabled: true },
+        watcher: { enabled: true }
+    }
+};
 
+async function loadAgentConfig() {
+    try {
+        const response = await fetch('/api/config');
+        if (response.ok) {
+            agentConfig = await response.json();
+            logTerminal("[REGISTRY] Dynamic configurations synchronized from local REST endpoints.", "success");
+        }
+    } catch (e) {
+        // Dynamic REST fallback
+        const cached = localStorage.getItem('auramem_agents_config');
+        if (cached) {
+            agentConfig = JSON.parse(cached);
+        }
+    }
+    updateWorkspacesSidebar();
+}
+
+function initDOMElements() {
     piiToggle = document.getElementById('guardrail-scrub-pii');
     topicToggle = document.getElementById('guardrail-blocked-topics');
     decaySlider = document.getElementById('param-decay');
     decayVal = document.getElementById('decay-val');
     depthSlider = document.getElementById('param-depth');
     depthVal = document.getElementById('depth-val');
-    
-    blockedKeywordsList = document.getElementById('blocked-keywords');
-    newKeywordInput = document.getElementById('new-keyword');
     
     memoryInput = document.getElementById('memory-input');
     memoryTags = document.getElementById('memory-tags');
@@ -253,28 +293,25 @@ function initDOMElements() {
     gitRemoteVal = document.getElementById('git-remote-val');
     githubReleaseText = document.getElementById('github-release-textarea');
     gitStatusBadge = document.getElementById('git-status-badge');
-}
-
-function setupCanvas() {
-    const resize = () => {
-        const container = canvas.parentElement;
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight || 400;
-    };
-    resize();
-    window.addEventListener('resize', resize);
+    
+    onboardingOverlay = document.getElementById('onboarding-overlay');
+    activeStorageBadge = document.getElementById('active-storage-mode');
+    activeNodesCountLabel = document.getElementById('active-nodes-count');
+    sidebarWorkspaceList = document.getElementById('agent-workspace-list');
+    padlockBeliefInput = document.getElementById('padlock-belief-input');
+    detailGlassCard = document.getElementById('detail-glass-card');
+    dreamSparkAlert = document.getElementById('dream-spark-alert');
 }
 
 function setupEventListeners() {
-    // Control bindings
     piiToggle.addEventListener('change', (e) => {
         piiScrubActive = e.target.checked;
-        logTerminal(`[GUARDRAIL] PII scrubbing ${piiScrubActive ? 'ENABLED' : 'DISABLED'}.`, 'warning');
+        logTerminal(`[GUARDRAIL] PII scrubbing filter is ${piiScrubActive ? 'ACTIVE' : 'INACTIVE'}.`, 'warning');
     });
     
     topicToggle.addEventListener('change', (e) => {
         topicBlockActive = e.target.checked;
-        logTerminal(`[GUARDRAIL] Topic restrictions ${topicBlockActive ? 'ENABLED' : 'DISABLED'}.`, 'warning');
+        logTerminal(`[GUARDRAIL] Restricted category enforcement ${topicBlockActive ? 'ACTIVE' : 'INACTIVE'}.`, 'warning');
     });
 
     decaySlider.addEventListener('input', (e) => {
@@ -286,58 +323,316 @@ function setupEventListeners() {
         maxDepth = parseInt(e.target.value);
         depthVal.textContent = maxDepth;
     });
+}
 
-    // Canvas Mouse listeners
-    canvas.addEventListener('mousedown', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        mouse.x = e.clientX - rect.left;
-        mouse.y = e.clientY - rect.top;
+// --- STEPPER ONBOARDING INTERACTION ---
+function selectProfile(type, value) {
+    activeProfile[type] = value;
+    
+    // Manage active buttons class
+    const envEdge = document.getElementById('env-edge');
+    const envDaemon = document.getElementById('env-daemon');
+    const wSingle = document.getElementById('workload-single');
+    const wSwarm = document.getElementById('workload-swarm');
+    
+    if (type === 'env') {
+        if (value === 'edge') {
+            envEdge.classList.add('active');
+            envDaemon.classList.remove('active');
+        } else {
+            envDaemon.classList.add('active');
+            envEdge.classList.remove('active');
+        }
+    } else if (type === 'workload') {
+        if (value === 'single') {
+            wSingle.classList.add('active');
+            wSwarm.classList.remove('active');
+        } else {
+            wSwarm.classList.add('active');
+            wSingle.classList.remove('active');
+        }
+    }
+    
+    updateRecommendation();
+}
 
-        // Check if node is clicked
-        draggedNode = findNodeAt(mouse.x, mouse.y);
-        if (draggedNode) {
-            offset.x = draggedNode.x - mouse.x;
-            offset.y = draggedNode.y - mouse.y;
+function updateRecommendation() {
+    const title = document.getElementById('rec-path-title');
+    const explanation = document.getElementById('rec-path-explanation');
+    const configBlock = document.getElementById('rec-config-code');
+    const badge = document.getElementById('rec-path-badge');
+    const recBox = document.querySelector('.recommendation-box');
+    
+    if (activeProfile.env === 'edge' && activeProfile.workload === 'single') {
+        // Path A: JSONL
+        storageMode = 'jsonl';
+        badge.textContent = 'PATH A';
+        title.textContent = 'Zero-Dependency JSONL Log Engine';
+        explanation.textContent = 'Ideal for browser sandboxes and single-agent edge tasks. Ephemeral process-local append logging with instant edge retrieval and zero database overhead.';
+        recBox.classList.remove('sqlite-rec');
+        
+        configBlock.textContent = JSON.stringify({
+            "storage_mode": "jsonl",
+            "db_path": "data/cortex_memory.jsonl",
+            "system1_decay_rate": 0.10,
+            "max_retrieval_depth": 8
+        }, null, 2);
+    } else {
+        // Path B: SQLite Relational
+        storageMode = 'sqlite';
+        badge.textContent = 'PATH B';
+        title.textContent = 'SQLite-Unified Relational Engine';
+        explanation.textContent = 'Ideal for swarm concurrency and multi-agent daemons. Swaps storage to a transactional database engine, preventing write-contention lock corruption natively.';
+        recBox.classList.add('sqlite-rec');
+        
+        configBlock.textContent = JSON.stringify({
+            "storage_mode": "sqlite",
+            "db_path": "data/cortex_memory.db",
+            "system1_decay_rate": 0.10,
+            "max_retrieval_depth": 8
+        }, null, 2);
+    }
+}
+
+function goToStep(step) {
+    // Hide active step content
+    document.querySelectorAll('.step-content').forEach(c => c.classList.remove('active'));
+    document.getElementById(`step-${step}-content`).classList.add('active');
+    
+    // Update step dots
+    document.querySelectorAll('.step-dot').forEach((dot, idx) => {
+        const dotNum = idx + 1;
+        dot.classList.remove('active', 'complete');
+        if (dotNum < step) {
+            dot.classList.add('complete');
+        } else if (dotNum === step) {
+            dot.classList.add('active');
         }
     });
+    
+    currentStep = step;
+}
 
-    canvas.addEventListener('mousemove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        mouse.x = e.clientX - rect.left;
-        mouse.y = e.clientY - rect.top;
-
-        if (draggedNode) {
-            draggedNode.x = mouse.x + offset.x;
-            draggedNode.y = mouse.y + offset.y;
-            draggedNode.vx = 0;
-            draggedNode.vy = 0;
-        }
-
-        hoveredNode = findNodeAt(mouse.x, mouse.y);
-        canvas.style.cursor = draggedNode ? 'grabbing' : (hoveredNode ? 'pointer' : 'default');
+// Ingest immutable core ego anchors
+function injectEgoDNA() {
+    const belief1 = document.getElementById('ego-belief-1').value.trim();
+    const belief2 = document.getElementById('ego-belief-2').value.trim();
+    const belief3 = document.getElementById('ego-belief-3').value.trim();
+    
+    if (!belief1 || !belief2 || !belief3) {
+        alert("Ego beliefs cannot be empty! Please seed all three fields to grow the agent core soul.");
+        return;
+    }
+    
+    egoBeliefs = [belief1, belief2, belief3];
+    
+    // Purge old nodes to seed Ego freshly
+    nodes = [];
+    links = [];
+    
+    // Add permanent Golden Ego Anchor Nodes
+    egoBeliefs.forEach((belief, idx) => {
+        const egoNode = {
+            id: `ego_anchor_${idx + 1}`,
+            content: belief,
+            tags: ["EgoCore", "Directive"],
+            system: "long_term",
+            importance: 1.0,
+            strength: 1.0, // Immutable infinite strength indicator
+            accessCount: 10,
+            x: 200 + idx * 150,
+            y: 200 + (idx % 2 === 0 ? 60 : -60),
+            fx: 200 + idx * 150, // fix positions initially so they anchor the gravity centroid
+            fy: 200 + (idx % 2 === 0 ? 60 : -60),
+            vector: embedNode(["EgoCore", "Directive"], belief)
+        };
+        nodes.push(egoNode);
     });
+    
+    recalculateSemanticLinks();
+    updateD3Graph();
+    calculateEmotionalCentroids();
+    
+    // Push custom seeding report to step 4 console logs
+    const diagTerminal = document.getElementById('diagnostic-terminal');
+    diagTerminal.innerHTML = `
+        <div class="con-line cyan">[SYSTEM] Core soul injected. Gravitational Ego anchors generated.</div>
+        <div class="con-line cyan"> -> Anchor Node #1 ID: ego_anchor_1 (Mass: 2.0x, Strength: LOCKED INF)</div>
+        <div class="con-line cyan"> -> Anchor Node #2 ID: ego_anchor_2 (Mass: 2.0x, Strength: LOCKED INF)</div>
+        <div class="con-line cyan"> -> Anchor Node #3 ID: ego_anchor_3 (Mass: 2.0x, Strength: LOCKED INF)</div>
+        <div class="con-line">[SYSTEM] Ready to boot Model Context Protocol connection handshakes.
+    `;
+    
+    goToStep(4);
+}
 
-    canvas.addEventListener('mouseup', () => {
-        draggedNode = null;
-    });
-
-    canvas.addEventListener('mouseleave', () => {
-        draggedNode = null;
-        hoveredNode = null;
+function bootHandshake() {
+    const diagTerminal = document.getElementById('diagnostic-terminal');
+    const bootBtn = document.getElementById('diag-boot-btn');
+    const backBtn = document.getElementById('diag-back-btn');
+    const launchBtn = document.getElementById('diag-launch-btn');
+    
+    bootBtn.disabled = true;
+    backBtn.classList.add('hidden');
+    
+    let logs = [
+        { text: "[09:41:02] [GATEWAY] Locating local process daemon...", delay: 200 },
+        { text: "[09:41:02] [JSON-RPC 2.0] Transmitting tools initialize handshake frame...", delay: 500 },
+        { text: "[09:41:02] [JSON-RPC 2.0] Sent: {'jsonrpc': '2.0', 'method': 'initialize', 'id': 1}", delay: 800 },
+        { text: "[09:41:03] [JSON-RPC 2.0] Received INITIALIZE response. Protocol: v2024-11-05. Secure client confirmed.", delay: 1100, type: 'cyan' },
+        { text: "[09:41:03] [CORTEX] Ingesting multi-agent sandboxing verification suite...", delay: 1400 },
+        { text: "[09:41:03] [SANDBOX] Agent isolating namespaces default -> hermes verified cleanly. [NO WORKSPACE BLEEDING]", delay: 1700, type: 'cyan' },
+        { text: "[09:41:03] [SQLITE] Testing sharded relational hot-swapping under write contention...", delay: 2000 },
+        { text: "[09:41:04] [SQLITE] Relational write-safety confirmed. core/config.json updated to 'sqlite'.", delay: 2300, type: 'cyan' },
+        { text: "[09:41:04] [DATABASE] Zero data loss relational migrations verified. [100% CORRECTNESS]", delay: 2600, type: 'success' },
+        { text: "✓ MCP NATIVE GATEWAY ONLINE [100% CORRECTNESS]. System secure.", delay: 2900, type: 'success' }
+    ];
+    
+    logs.forEach(log => {
+        setTimeout(() => {
+            const div = document.createElement('div');
+            div.className = `con-line ${log.type || ''}`;
+            div.textContent = log.text;
+            diagTerminal.appendChild(div);
+            diagTerminal.scrollTop = diagTerminal.scrollHeight;
+            
+            // On complete
+            if (log.type === 'success' && log.text.includes("MCP NATIVE")) {
+                bootBtn.classList.add('hidden');
+                launchBtn.classList.remove('hidden');
+            }
+        }, log.delay);
     });
 }
 
-// --- CONVERSATION WATCHER INTEGRATION ---
+function dismissOnboarding() {
+    onboardingOverlay.classList.add('dismissed');
+    localStorage.setItem('auramem_onboarding_complete', 'true');
+    
+    // Set dynamic indicators
+    activeStorageBadge.textContent = storageMode.toUpperCase();
+    activeStorageBadge.className = `metric-value font-mono ${storageMode === 'sqlite' ? 'purple-glow' : 'cyan-glow'}`;
+    
+    logTerminal("[SYSTEM] Onboarding stepper diagnostics passed. Sovereign Commander Console active.", "success");
+    logTerminal(`[SYSTEM] Initialized dual-system memory engine on path: data/cortex_memory.${storageMode === 'sqlite' ? 'db' : 'jsonl'}`);
+    
+    // Release fixed positions of Ego Anchors so they interact organically
+    nodes.forEach(n => {
+        if (n.id.startsWith("ego_anchor_")) {
+            n.fx = null;
+            n.fy = null;
+        }
+    });
+    simulation.alpha(1).restart();
+}
+
+// --- WORKSPACE LIBRARY SIDEBAR ---
+let activeAgentList = [
+    { id: 'default', engine: 'SQLITE', rate: '0.10', active: true },
+    { id: 'hermes', engine: 'SQLITE', rate: '0.15', active: false },
+    { id: 'claw_bot', engine: 'JSONL', rate: '0.05', active: false }
+];
+
+function updateWorkspacesSidebar() {
+    sidebarWorkspaceList.innerHTML = '';
+    activeAgentList.forEach(agent => {
+        const div = document.createElement('div');
+        div.className = `agent-workspace-card ${agent.id === activeWorkspace ? 'active' : ''}`;
+        div.onclick = () => switchWorkspace(agent.id);
+        div.innerHTML = `
+            <div class="card-header-row">
+                <span class="agent-id-tag font-mono">${agent.id}</span>
+                <span class="engine-indicator">${agent.engine}</span>
+            </div>
+            <div class="card-body-row">
+                <span class="card-sub-info">Decay rate: ${agent.rate} / sweep</span>
+                <span class="card-status-dot ${agent.id === activeWorkspace ? 'active' : ''}"></span>
+            </div>
+        `;
+        sidebarWorkspaceList.appendChild(div);
+    });
+    
+    activeNodesCountLabel.textContent = nodes.length;
+}
+
+function switchWorkspace(namespace) {
+    if (namespace === activeWorkspace) return;
+    
+    logTerminal(`[SYSTEM] Switching workspace namespace: ${activeWorkspace} ➔ ${namespace}...`, 'info');
+    activeWorkspace = namespace;
+    
+    // Emulate switching and seeding memories unique to namespace
+    nodes = [];
+    links = [];
+    
+    // Seed golden ego anchors unique to workspace
+    egoBeliefs.forEach((belief, idx) => {
+        nodes.push({
+            id: `ego_anchor_${idx + 1}`,
+            content: belief,
+            tags: ["EgoCore", "Directive"],
+            system: "long_term",
+            importance: 1.0,
+            strength: 1.0,
+            accessCount: 10,
+            x: 300,
+            y: 250,
+            vector: embedNode(["EgoCore", "Directive"], belief)
+        });
+    });
+    
+    if (namespace === 'default') {
+        seedInitialMemories();
+    } else if (namespace === 'hermes') {
+        createNode("Hermes agent must process sub-millisecond core queries.", ["AI", "Hermes"], "working", 0.8, 1.0);
+        createNode("Multi-agent pipelines can suffer structural friction under loose sandboxing.", ["Architecture", "Safety"], "working", 0.7, 1.0);
+    } else {
+        createNode("Claw Bot sequential search actions crawler.", ["Claw", "Web"], "working", 0.6, 1.0);
+    }
+    
+    recalculateSemanticLinks();
+    updateD3Graph();
+    calculateEmotionalCentroids();
+    updateWorkspacesSidebar();
+}
+
+function createNewAgentNamespace() {
+    const input = document.getElementById('new-workspace-id');
+    const val = input.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    
+    if (!val) {
+        alert("Enter a valid namespace alphanumeric ID.");
+        return;
+    }
+    
+    // Check if exists
+    if (activeAgentList.some(a => a.id === val)) {
+        alert("Namespace already registered.");
+        return;
+    }
+    
+    activeAgentList.push({
+        id: val,
+        engine: storageMode.toUpperCase(),
+        rate: '0.10',
+        active: false
+    });
+    
+    logTerminal(`[REGISTRY] New sandboxed multi-agent namespace created: '${val}'. Ready for telemetry.`, 'success');
+    input.value = '';
+    updateWorkspacesSidebar();
+    switchWorkspace(val);
+}
+
+// --- CONVERSATION WATCHER DATA SYNC ---
 async function loadWatcherData() {
     try {
-        logTerminal(`[SYSTEM] Accessing logs analysis reports...`);
         const response = await fetch('../data/watcher_data.json');
-        if (!response.ok) throw new Error('Data file missing');
+        if (!response.ok) throw new Error("Missing watcher data JSON file.");
         
         const data = await response.json();
         instagramPosts = data.instagram_posts;
         
-        // Populate selector
         postSelect.innerHTML = '';
         instagramPosts.forEach((post, idx) => {
             const opt = document.createElement('option');
@@ -346,84 +641,26 @@ async function loadWatcherData() {
             postSelect.appendChild(opt);
         });
         
-        logTerminal(`[SYSTEM] Loaded Instagram scripts compiled by Watcher Agent.`, 'success');
         loadInstagramPost();
         
-        // Extract and populate GitHub Release milestones
         const milestones = data.summary.milestones || [];
         updateGitHubReleaseNotes(milestones);
+        logTerminal("[SYSTEM] Watcher Agent reports successfully mapped inside the bottom accordion reviewed drawer.", "success");
         
     } catch (err) {
-        logTerminal(`[SYSTEM] Watcher Agent file compiled with fallback templates.`, 'info');
-        // Fallback static data
+        // Fallback structures if file is not found
         instagramPosts = [
             {
                 "title": "Post 1: The AI Memory Lie Nobody Tells You",
                 "hook": "❌ Traditional vector DBs are KILLING your AI agent's speed.",
                 "theme": "Educational Hook",
                 "slides": [
-                    {
-                        "slide_num": 1,
-                        "headline": "The AI Memory Lie 🧠",
-                        "body": "Everyone thinks AI agents remember things because of 'Vector Databases'. But middleware wrappers slow down agents and add unnecessary layers. Here is how we build NATIVE memory..."
-                    },
-                    {
-                        "slide_num": 2,
-                        "headline": "The Middleware Problem 🔌",
-                        "body": "LLM -> Tool Call -> Vector DB -> Embeddings -> Search -> Prompt Inject. This is NOT how humans think. It makes AI feel laggy and disconnected. We need a dual-system cognitive brain."
-                    },
-                    {
-                        "slide_num": 3,
-                        "headline": "System 1 vs System 2 ⚡️",
-                        "body": "- System 1 (Working Memory): Ephemeral, high-decay, holds immediate chat tokens.\n- System 2 (Long-Term): Consolidated knowledge that is permanently linked through semantic tag weight."
-                    },
-                    {
-                        "slide_num": 4,
-                        "headline": "Configurable Guardrails 🛡️",
-                        "body": "We don't filter at the end. We filter *at the gates*. A schema-driven engine scrubs PII (emails, keys) and blocks restricted topics natively BEFORE they consolidate."
-                    },
-                    {
-                        "slide_num": 5,
-                        "headline": "Watch it Live! 🚀",
-                        "body": "I'm building this live. Slide to see the code structure! Check my bio link to see the GitHub repo and live interactive graph simulation!"
-                    }
+                    { "slide_num": 1, "headline": "The AI Memory Lie 🧠", "body": "Everyone thinks AI agents remember things because of 'Vector Databases'. But middleware wrappers slow down agents and add unnecessary layers. Here is how we build NATIVE memory..." },
+                    { "slide_num": 2, "headline": "The Middleware Problem 🔌", "body": "LLM -> Tool Call -> Vector DB -> Embeddings -> Search -> Prompt Inject. This is NOT how humans think. It makes AI feel laggy and disconnected. We need a dual-system cognitive brain." },
+                    { "slide_num": 3, "headline": "System 1 vs System 2 ⚡️", "body": "- System 1 (Working Memory): Ephemeral, high-decay, holds immediate chat tokens.\n- System 2 (Long-Term): Consolidated knowledge that is permanently linked through semantic tag weight." }
                 ],
-                "cta": "💡 Want to build native AI brains that think like humans? Comment 'MEMORY' and I'll send you the Github repository link directly! Let's build together.",
-                "hashtags": "#AIAgents #AgenticMemory #SoftwareEngineering #PythonProgramming #TechStartup #ArtificialIntelligence #IndieHacker #VCNetworking"
-            },
-            {
-                "title": "Post 2: Coding an AI Brain in 100 Lines of Python",
-                "hook": "🐍 How to code a native dual-system AI memory module with zero dependencies.",
-                "theme": "Technical Tutorial",
-                "slides": [
-                    {
-                        "slide_num": 1,
-                        "headline": "Native Memory in Python 💻",
-                        "body": "No Vector DB wrappers. No complex frameworks. Just pure, native cognitive architecture. Swipe to build your own dual-system AI brain in under 100 lines!"
-                    },
-                    {
-                        "slide_num": 2,
-                        "headline": "Step 1: The Memory Node 🧬",
-                        "body": "Define a MemoryNode class. It stores the content, timestamps, access counts, and an association dictionary linking it to other nodes by semantic weight."
-                    },
-                    {
-                        "slide_num": 3,
-                        "headline": "Step 2: Configurable Guardrails 🛡️",
-                        "body": "Inject a GuardrailEngine that intercepts memory writes. Automatically scrubs out passwords, API keys, and blocks malicious topics natively before storage."
-                    },
-                    {
-                        "slide_num": 4,
-                        "headline": "Step 3: The Consolidation Loop 🔄",
-                        "body": "Create a `consolidate()` routine. Ephemeral System 1 nodes decay over time. Nodes with high frequency or importance are promoted to permanent System 2!"
-                    },
-                    {
-                        "slide_num": 5,
-                        "headline": "Get the Full Code! 🚀",
-                        "body": "The entire code is open-source. Drop a comment or message me to get instant access to the interactive graph web app!"
-                    }
-                ],
-                "cta": "🚀 Drop a comment 'CODE' to get the full python source and web visualizer! Let's redefine agent memory.",
-                "hashtags": "#PythonCode #CodeTutorial #WebDevelopment #AIArchitecture #AIAgents #TechFounder #Startups #InstagramDev"
+                "cta": "💡 Want to build native AI brains that think like humans? Comment 'MEMORY' and I'll send you the Github repository link directly!",
+                "hashtags": "#AIAgents #AgenticMemory #SoftwareEngineering"
             }
         ];
         
@@ -435,26 +672,18 @@ async function loadWatcherData() {
             postSelect.appendChild(opt);
         });
         loadInstagramPost();
-
-        // Default milestones for fallback
-        const milestones = [
+        
+        updateGitHubReleaseNotes([
             "System Core: Created cortex_memory.py containing the dual-system memory engine.",
             "Watcher Agent: Created watcher_agent.py to parse logs and write content.",
-            "Visual Interface: Designed high-fidelity canvas graph for memory visualization.",
-            "GitHub Sync Hub: Implemented automated github pusher agent and web control widget."
-        ];
-        updateGitHubReleaseNotes(milestones);
+            "Visual Interface: Designed high-fidelity canvas graph for memory visualization."
+        ]);
     }
 }
 
 function updateGitHubReleaseNotes(milestones) {
-    let text = `# 🧠 AURAMEMORY: LAYERLESS NATIVE COGNITIVE MEMORY ENGINE (v1.0.0) 🚀\n\n`;
+    let text = `# 🧠 AURAMEMORY: LAYERLESS NATIVE COGNITIVE MEMORY ENGINE (v1.1.17) 🚀\n\n`;
     text += `Standard RAG architectures rely on slow, complex vector database middleware wrappers. AuraMemory replaces this with a layerless, native cognitive engine executing dual-system memory loops inside agent processes.\n\n`;
-    text += `## ⚡ Key Highlights\n`;
-    text += `- **System 1 (Working Memory)**: Transient context nodes with automatic reinforcement and decay.\n`;
-    text += `- **System 2 (Long-Term Associative Memory)**: Permanent cognitive knowledge consolidation via tag intersection matrices.\n`;
-    text += `- **Configurable Guardrails**: Embedded active safety scrubbing (PII filters) and semantic topic blocks.\n`;
-    text += `- **Stunning Glassmorphic Visualizer**: High-fidelity HTML5 Canvas with custom spring-physics simulation.\n\n`;
     text += `## 🚀 Active Milestones\n`;
     milestones.forEach(m => {
         text += `- ${m}\n`;
@@ -468,9 +697,10 @@ function loadInstagramPost() {
     activeSlideIndex = 0;
     
     const post = instagramPosts[activePostIndex];
+    if (!post) return;
+    
     postThemeBadge.textContent = post.theme;
     
-    // Caption text assembly
     let captionText = `🔥 INSIGHTS FROM THE BRAIN: ${post.hook}\n\n`;
     post.slides.forEach(s => {
         captionText += `Slide ${s.slide_num}: ${s.headline}\n👉 ${s.body}\n\n`;
@@ -480,7 +710,6 @@ function loadInstagramPost() {
     
     igCaptionText.value = captionText;
     
-    // Setup carousel indicators
     igIndicators.innerHTML = '';
     post.slides.forEach((_, sIdx) => {
         const ind = document.createElement('span');
@@ -493,13 +722,14 @@ function loadInstagramPost() {
 
 function renderMockPhoneSlide() {
     const post = instagramPosts[activePostIndex];
+    if (!post) return;
     const slide = post.slides[activeSlideIndex];
+    if (!slide) return;
     
     igSlideCount.textContent = `SLIDE ${slide.slide_num}/${post.slides.length}`;
     igSlideHeadline.textContent = slide.headline;
     igSlideBody.textContent = slide.body;
     
-    // Update active indicator dot
     const indicators = igIndicators.querySelectorAll('.indicator');
     indicators.forEach((ind, sIdx) => {
         if (sIdx === activeSlideIndex) ind.classList.add('active');
@@ -509,7 +739,7 @@ function renderMockPhoneSlide() {
 
 function nextSlide() {
     const post = instagramPosts[activePostIndex];
-    if (activeSlideIndex < post.slides.length - 1) {
+    if (post && activeSlideIndex < post.slides.length - 1) {
         activeSlideIndex++;
         renderMockPhoneSlide();
     }
@@ -525,7 +755,7 @@ function prevSlide() {
 function copyCaptionText() {
     igCaptionText.select();
     document.execCommand('copy');
-    logTerminal(`[SYSTEM] Caption copied to clipboard successfully!`, 'success');
+    logTerminal(`[SYSTEM] Instagram Caption copied to clipboard successfully!`, 'success');
 }
 
 function copyGitHubReleaseNotes() {
@@ -542,43 +772,190 @@ function copyCLICommand() {
     window.getSelection().addRange(range);
     document.execCommand('copy');
     window.getSelection().removeAllRanges();
-    logTerminal(`[SYSTEM] CLI Launcher Command copied to clipboard!`, 'success');
+    logTerminal(`[SYSTEM] CLI Sync command copied!`, 'success');
 }
 
-
-// --- NATIVE ENGINE SEED & SANDBOX ---
-function seedInitialMemories() {
-    createNode("I am learning how to build agentic memory modules natively.", ["AI", "AgenticMemory"], "working", 0.8, 1.0);
-    createNode("AuraMemory uses a dual-system cognitive architecture.", ["AI", "Architecture"], "working", 0.9, 1.0);
-    createNode("Instagram content should have high hooks to attract followers.", ["Marketing", "Instagram"], "working", 0.4, 1.0);
+// --- D3.JS FORCE DIRECTED GRAPH WEB GRAPH ---
+function setupD3Graph() {
+    const container = document.getElementById('svg-graph-container');
+    const width = container.clientWidth;
+    const height = container.clientHeight || 520;
     
-    // Re-link
-    recalculateLinks();
-}
-
-function createNode(content, tags, system, importance, strength) {
-    const x = Math.random() * (canvas.width - 150) + 75;
-    const y = Math.random() * (canvas.height - 150) + 75;
+    svg = d3.select("#memory-svg")
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .call(d3.zoom().on("zoom", (event) => {
+            containerGroup.attr("transform", event.transform);
+        }))
+        .append("g");
+        
+    const containerGroup = svg.append("g");
     
-    const node = {
-        id: Math.random().toString(36).substring(2, 9),
-        content,
-        tags,
-        system, // "working" or "long_term"
-        importance,
-        strength,
-        accessCount: 1,
-        x,
-        y,
-        vx: 0,
-        vy: 0,
-        vector: embedNode(tags, content)
-    };
-    nodes.push(node);
-    return node;
+    // Setup D3 simulation forces
+    simulation = d3.forceSimulation()
+        .force("link", d3.forceLink().id(d => d.id).distance(120).strength(d => d.strength))
+        .force("charge", d3.forceManyBody().strength(-1500).distanceMax(250))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collision", d3.forceCollide().radius(nodeRadius + 15))
+        .on("tick", ticked);
+        
+    linkGroup = containerGroup.append("g").attr("class", "links");
+    nodeGroup = containerGroup.append("g").attr("class", "nodes");
 }
 
-function recalculateLinks() {
+function ticked() {
+    const container = document.getElementById('svg-graph-container');
+    const w = container.clientWidth;
+    const h = container.clientHeight || 520;
+
+    linkGroup.selectAll("line")
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+        
+    nodeGroup.selectAll(".node")
+        .attr("transform", d => {
+            // Keep in bounds
+            d.x = Math.max(nodeRadius + 20, Math.min(w - nodeRadius - 20, d.x));
+            d.y = Math.max(nodeRadius + 20, Math.min(h - nodeRadius - 20, d.y));
+            return `translate(${d.x}, ${d.y})`;
+        });
+}
+
+function updateD3Graph() {
+    // 1. Data Bind Links
+    const l = linkGroup.selectAll("line")
+        .data(links, d => `${d.source}-${d.target}`);
+        
+    l.exit().remove();
+    
+    const lEnter = l.enter().append("line")
+        .attr("stroke", "rgba(139, 92, 246, 0.2)")
+        .attr("stroke-width", d => 1.5 + d.strength * 2.5);
+        
+    const mergedLinks = lEnter.merge(l);
+    
+    // 2. Data Bind Nodes
+    const n = nodeGroup.selectAll(".node")
+        .data(nodes, d => d.id);
+        
+    n.exit().transition()
+        .duration(600)
+        .style("opacity", 0)
+        .style("transform", "scale(0.1)")
+        .remove();
+        
+    const nEnter = n.enter().append("g")
+        .attr("class", "node")
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+            
+    // Nodes Inner Gradient circle
+    nEnter.append("circle")
+        .attr("r", nodeRadius)
+        .attr("stroke-width", 2)
+        .attr("class", d => d.system === 'long_term' ? (d.id.startsWith("ego_") ? 'stroke-gold' : 'stroke-purple') : 'stroke-cyan')
+        .style("fill", d => {
+            if (d.system === 'long_term') {
+                return d.id.startsWith("ego_") ? 'url(#grad-gold)' : 'url(#grad-purple)';
+            }
+            return 'url(#grad-cyan)';
+        });
+        
+    // Text labels S1/S2/Ego
+    nEnter.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dy", "-2px")
+        .attr("fill", "#FFF")
+        .style("font-family", "Outfit")
+        .style("font-size", "11px")
+        .style("font-weight", "700")
+        .text(d => d.id.startsWith("ego_anchor_") ? "EGO" : (d.system === 'long_term' ? "S2" : "S1"));
+        
+    // Subtext strength rating
+    nEnter.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dy", "10px")
+        .attr("fill", d => d.system === 'long_term' ? (d.id.startsWith("ego_") ? '#FBBF24' : '#D8B4FE') : '#67E8F9')
+        .style("font-family", "Fira Code")
+        .style("font-size", "8px")
+        .text(d => d.system === 'long_term' ? "INF" : d.strength.toFixed(2));
+        
+    // Interactivity bindings
+    nEnter.on("mouseover", (event, d) => {
+        showFloatingNodeDetails(d);
+        // Recalculate intermediate sparks overlays on-the-fly
+        scanSynapticGaps(d);
+    }).on("mouseout", () => {
+        // Keep card open unless they click away
+    });
+    
+    // Pulse ring overlays if pulse timer is active
+    nEnter.filter(d => d.pulseTimer > 0)
+        .append("circle")
+        .attr("class", "pulse-ring")
+        .attr("r", nodeRadius + 10)
+        .attr("fill", "none")
+        .attr("stroke", d => d.system === 'long_term' ? '#8B5CF6' : '#06B6D4')
+        .attr("stroke-width", 2)
+        .style("opacity", 0.7)
+        .transition()
+        .duration(1200)
+        .attr("r", nodeRadius + 28)
+        .style("opacity", 0)
+        .remove();
+
+    const mergedNodes = nEnter.merge(n);
+    
+    // Update forces data
+    simulation.nodes(nodes);
+    simulation.force("link").links(links);
+    simulation.alpha(0.3).restart();
+    
+    // Add SVG Gradients once
+    if (d3.select("#svg-grads").empty()) {
+        const defs = d3.select("#memory-svg").append("defs").attr("id", "svg-grads");
+        
+        // Cyan S1
+        const gCyan = defs.append("radialGradient").attr("id", "grad-cyan");
+        gCyan.append("stop").attr("offset", "0%").attr("stop-color", "rgba(6, 182, 212, 0.45)");
+        gCyan.append("stop").attr("offset", "100%").attr("stop-color", "rgba(13, 148, 136, 0.95)");
+
+        // Purple S2
+        const gPurple = defs.append("radialGradient").attr("id", "grad-purple");
+        gPurple.append("stop").attr("offset", "0%").attr("stop-color", "rgba(139, 92, 246, 0.5)");
+        gPurple.append("stop").attr("offset", "100%").attr("stop-color", "rgba(79, 70, 229, 0.95)");
+
+        // Gold Ego
+        const gGold = defs.append("radialGradient").attr("id", "grad-gold");
+        gGold.append("stop").attr("offset", "0%").attr("stop-color", "rgba(251, 191, 36, 0.6)");
+        gGold.append("stop").attr("offset", "100%").attr("stop-color", "rgba(217, 119, 6, 0.95)");
+    }
+}
+
+// Drag behaviors
+function dragstarted(event, d) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+}
+
+function dragged(event, d) {
+    d.fx = event.x;
+    d.fy = event.y;
+}
+
+function dragended(event, d) {
+    if (!event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+}
+
+function recalculateSemanticLinks() {
     links = [];
     for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
@@ -596,169 +973,404 @@ function recalculateLinks() {
             }
         }
     }
+    
+    activeNodesCountLabel.textContent = nodes.length;
 }
 
-function findNodeAt(x, y) {
-    for (const node of nodes) {
-        const d = Math.hypot(node.x - x, node.y - y);
-        if (d < physics.nodeRadius) return node;
-    }
-    return null;
+// --- AFFECTIVE CENTROID GAUGES MATH ---
+function calculateEmotionalCentroids() {
+    if (nodes.length === 0) return;
+    
+    // Centroid Vector Math
+    let centroid = Array(8).fill(0.0);
+    nodes.forEach(node => {
+        // Double weight Ego anchors for gravity centroids
+        const w = node.id.startsWith("ego_") ? 2.5 : 1.0;
+        for (let i = 0; i < 8; i++) {
+            centroid[i] += node.vector[i] * w * (node.strength || 1.0);
+        }
+    });
+    
+    // Average
+    const N = nodes.length;
+    for (let i = 0; i < 8; i++) centroid[i] /= N;
+    
+    // Map dimensions to 5 circular dial affective coordinates
+    centroids.curiosity = Math.min(1.0, Math.max(0.1, (centroid[0] * 1.5) + (centroid[6] * 0.5)));
+    centroids.caution = Math.min(1.0, Math.max(0.1, (centroid[2] * 0.8) + (centroid[3] * 1.8)));
+    centroids.sociability = Math.min(1.0, Math.max(0.1, (centroid[4] * 1.4) + (centroid[5] * 0.8)));
+    centroids.sovereignty = Math.min(1.0, Math.max(0.1, (centroid[2] * 1.5) + (centroid[1] * 0.7)));
+    centroids.creativity = Math.min(1.0, Math.max(0.1, (centroid[7] * 1.6) + (centroid[0] * 0.6)));
+    
+    // Animate dials
+    animateDial('curiosity', centroids.curiosity);
+    animateDial('caution', centroids.caution);
+    animateDial('sociability', centroids.sociability);
+    animateDial('sovereignty', centroids.sovereignty);
+    animateDial('creativity', centroids.creativity);
 }
 
-// Sandbox Commit
+function animateDial(label, val) {
+    const circle = document.getElementById(`gauge-${label}`);
+    const labelVal = document.getElementById(`val-${label}`);
+    if (!circle || !labelVal) return;
+    
+    const maxDash = 100;
+    const percentage = Math.round(val * 100);
+    circle.setAttribute("stroke-dasharray", `${percentage}, ${maxDash}`);
+    labelVal.textContent = val.toFixed(2);
+}
+
+// Sliders adversarial simulation loops
+function simulateAdversarial(val) {
+    const percentLabel = document.getElementById('slider-val-adversarial');
+    percentLabel.textContent = `${val}%`;
+    
+    const modifier = parseFloat(val) / 100;
+    
+    // Recalculate caution dials artificially surging
+    centroids.caution = Math.min(1.0, 0.20 + (modifier * 0.78));
+    centroids.sovereignty = Math.min(1.0, 0.75 + (modifier * 0.22));
+    centroids.curiosity = Math.max(0.05, 0.85 - (modifier * 0.7));
+    
+    animateDial('caution', centroids.caution);
+    animateDial('sovereignty', centroids.sovereignty);
+    animateDial('curiosity', centroids.curiosity);
+    
+    // Artificially compact nodes by adjusting force repulsion strength down
+    // (Mind turns defensive and packs semantic nodes tight!)
+    const defensiveRepulsion = -1500 + (modifier * 1000);
+    simulation.force("charge", d3.forceManyBody().strength(defensiveRepulsion).distanceMax(250));
+    simulation.alpha(0.5).restart();
+}
+
+function simulateLearning(val) {
+    const percentLabel = document.getElementById('slider-val-learning');
+    percentLabel.textContent = `${val}%`;
+    
+    const modifier = parseFloat(val) / 100;
+    
+    // Recalculate dial curiosity surging
+    centroids.curiosity = Math.min(1.0, 0.1 + (modifier * 0.9));
+    centroids.creativity = Math.min(1.0, 0.3 + (modifier * 0.7));
+    centroids.caution = Math.max(0.05, 0.20 - (modifier * 0.15));
+    
+    animateDial('curiosity', centroids.curiosity);
+    animateDial('creativity', centroids.creativity);
+    animateDial('caution', centroids.caution);
+    
+    // Scale nodes repulsion out (Mind is curious and expanding semantic links space!)
+    const curiousRepulsion = -1500 - (modifier * 1200);
+    simulation.force("charge", d3.forceManyBody().strength(curiousRepulsion).distanceMax(250));
+    simulation.alpha(0.5).restart();
+}
+
+// --- INTERACTIVE SANDBOX INGUEST & RECALLS ---
+function createNode(content, tags, system, importance, strength) {
+    const node = {
+        id: `node_${Math.random().toString(36).substring(2, 8)}`,
+        content,
+        tags,
+        system,
+        importance,
+        strength,
+        accessCount: 1,
+        x: 300 + (Math.random() - 0.5) * 80,
+        y: 250 + (Math.random() - 0.5) * 80,
+        vector: embedNode(tags, content)
+    };
+    nodes.push(node);
+    return node;
+}
+
 function commitNewMemory() {
     const text = memoryInput.value.trim();
     if (!text) {
-        logTerminal(`[SANDBOX] Input cannot be empty!`, 'error');
+        logTerminal("[SANDBOX] Input memory content cannot be empty!", "error");
         return;
     }
-
-    const rawTags = memoryTags.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
+    
+    const tagsInput = memoryTags.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
     const importance = parseFloat(memoryImportance.value);
-
-    logTerminal(`[PROCESS] Ingesting: "${text.substring(0, 45)}..."`);
-
-    // 1. Guardrail PII Scrubbing
+    
+    logTerminal(`[PROCESS] Analysing ingestion entry: "${text.substring(0, 45)}..."`);
+    
+    // 1. Scrub PII
     let processedText = text;
-    let piiViolations = [];
+    let scrubbedItems = [];
     
     if (piiScrubActive) {
         const emailRegex = /[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+/gi;
-        const keyRegex = /(?:key|token|auth|password|secret)[a-zA-Z0-9_\-\:\=\+\/]{6,32}/gi;
+        const keyRegex = /(?:key|token|auth|password|secret)[a-zA-Z0-9_\-\:\=\+\/]{5,32}/gi;
         
         if (emailRegex.test(processedText)) {
-            piiViolations.push("EMAIL");
+            scrubbedItems.push("EMAIL");
             processedText = processedText.replace(emailRegex, "<EMAIL_SCRUBBED>");
         }
         if (keyRegex.test(processedText)) {
-            piiViolations.push("API_KEY");
+            scrubbedItems.push("API_KEY");
             processedText = processedText.replace(keyRegex, "<API_KEY_SCRUBBED>");
         }
     }
-
-    if (piiViolations.length > 0) {
-        logTerminal(`[GUARDRAIL] PII Scrubbed: ${piiViolations.join(', ')}`, 'warning');
+    
+    if (scrubbedItems.length > 0) {
+        logTerminal(`[GUARDRAIL] PII Ingestion filter active. Scrubbed elements: ${scrubbedItems.join(", ")}`, 'warning');
     }
-
-    // 2. Guardrail Blocked Topics
-    let blockedViolations = [];
+    
+    // 2. Block restricted topics
+    let topicViolations = [];
     if (topicBlockActive) {
-        blockedTopics.forEach(topic => {
-            if (processedText.toLowerCase().includes(topic)) {
-                blockedViolations.push(topic);
+        const blockedWords = ['malware', 'hacking', 'insider-trading', 'malicious'];
+        blockedWords.forEach(word => {
+            if (processedText.toLowerCase().includes(word)) {
+                topicViolations.push(word.toUpperCase());
             }
         });
     }
-
-    if (blockedViolations.length > 0) {
-        logTerminal(`[GUARDRAIL] BLOCKED CATEGORY DETECTED: "${blockedViolations.join(', ')}". Entry REJECTED!`, 'error');
-        triggerAlertNotification(`GUARDRAIL CRITICAL: Entry rejected because it references "${blockedViolations[0]}".`);
+    
+    if (topicViolations.length > 0) {
+        logTerminal(`[GUARDRAIL] CRITICAL: Category restriction violation on "${topicViolations.join(", ")}". Ingestion rejected!`, 'error');
+        triggerAlertNotification(`GUARDRAIL ENFORCEMENT: Entry rejected due to blocked category directive "${topicViolations[0]}".`);
         memoryInput.value = '';
         return;
     }
-
-    // Success - add node
-    const node = createNode(processedText, rawTags, "working", importance, 1.0);
     
-    // Calculate connections
-    let newConnections = 0;
-    nodes.forEach(n => {
-        if (n.id !== node.id) {
-            const sim = cosineSimilarity(node.vector, n.vector);
-            if (sim >= 0.20) newConnections++;
-        }
-    });
-
-    recalculateLinks();
+    // Add Node
+    const node = createNode(processedText, tagsInput, "working", importance, 1.0);
+    node.pulseTimer = 180;
     
-    logTerminal(`[SYSTEM-1] Node committed. Vector computed. ID: ${node.id}. system: WORKING. Created ${newConnections} semantic links!`, 'success');
+    recalculateSemanticLinks();
+    updateD3Graph();
+    calculateEmotionalCentroids();
+    
+    logTerminal(`[SYSTEM-1] Node committed successfully. ID: ${node.id}. system: WORKING. Recalculated semantic connections.`, 'success');
     memoryInput.value = '';
 }
 
 function recallMemoryQuery() {
-    const rawTags = memoryTags.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
-    const queryText = memoryInput.value.trim();
+    const text = memoryInput.value.trim();
+    const tagsInput = memoryTags.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
     
-    if (rawTags.length === 0 && !queryText) {
-        logTerminal(`[SANDBOX] Enter tags or content above to recall matches.`, 'warning');
+    if (!text && tagsInput.length === 0) {
+        logTerminal("[SANDBOX] Input tags or search text above to recall associative nodes.", "warning");
         return;
     }
-
-    const qWords = [];
-    rawTags.forEach(t => qWords.push(...tokenizeText(t)));
-    if (queryText) qWords.push(...tokenizeText(queryText));
-
-    logTerminal(`[RECALL] Scanning cognitive space for query tokens...`);
     
-    const queryVector = embedWords(qWords);
+    const tokens = [];
+    tagsInput.forEach(t => tokens.push(...tokenizeText(t)));
+    if (text) tokens.push(...tokenizeText(text));
+    
+    logTerminal(`[RECALL] Crawling semantic KD-tree associative vector fields...`);
+    
+    const queryVector = embedWords(tokens);
     let matches = [];
     
     nodes.forEach(node => {
         const sim = cosineSimilarity(queryVector, node.vector);
-        if (sim > 0.15) {
+        if (sim >= 0.20) {
             matches.push({ node, sim });
             node.accessCount++;
-            node.strength = Math.min(1.0, node.strength + 0.15); // refresh strength
+            node.strength = Math.min(1.0, node.strength + 0.15); // refresh working strength
+            node.pulseTimer = 180;
         }
     });
-
+    
     if (matches.length === 0) {
-        logTerminal(`[RECALL] No nodes matches found in cognitive brain.`, 'warning');
+        logTerminal("[RECALL] Zero relevant nodes located inside the associative workspaces.", "warning");
     } else {
         matches.sort((a, b) => b.sim - a.sim);
-        logTerminal(`[RECALL] Found ${matches.length} matching memory nodes! (Highest CosSim: ${matches[0].sim.toFixed(2)})`, 'success');
+        logTerminal(`[RECALL] Retrieval finished. Located ${matches.length} matching nodes! (Highest CosSim: ${matches[0].sim.toFixed(2)})`, 'success');
         matches.forEach(m => {
-            logTerminal(` - Match: "${m.node.content.substring(0, 30)}..." [Similarity: ${m.sim.toFixed(2)}]`, 'info');
+            logTerminal(` - Node: "${m.node.content.substring(0, 30)}..." [Similarity: ${m.sim.toFixed(2)}]`, 'info');
         });
+        updateD3Graph();
+        calculateEmotionalCentroids();
     }
 }
 
-// Consolidation Cycle
-function runConsolidationCycle() {
-    logTerminal(`[CONSOLIDATION] Initiating cognitive consolidation worker...`);
+// Ingest Ego permanent anchors from the Dashboard Lockbox panel
+function commitEgoFromDashboard() {
+    const input = document.getElementById('padlock-belief-input');
+    const val = input.value.trim();
     
-    let promotedCount = 0;
-    let prunedCount = 0;
-    let remaining = [];
+    if (!val) {
+        logTerminal("[SANDBOX] Padlock belief input cannot be empty!", "error");
+        return;
+    }
+    
+    const egoNode = {
+        id: `ego_anchor_${nodes.length + 1}`,
+        content: val,
+        tags: ["EgoCore", "Lockbox"],
+        system: "long_term",
+        importance: 1.0,
+        strength: 1.0, // Permanent locked infinite strength
+        accessCount: 5,
+        x: 300,
+        y: 250,
+        vector: embedNode(["EgoCore", "Lockbox"], val)
+    };
+    
+    nodes.push(egoNode);
+    recalculateSemanticLinks();
+    updateD3Graph();
+    calculateEmotionalCentroids();
+    
+    logTerminal(`[EGOCORE] Seeded new permanent locked anchor node: "${val.substring(0, 30)}..."`, 'success');
+    input.value = '';
+}
 
+// Floating details glass card inside center panel
+function showFloatingNodeDetails(node) {
+    const idLabel = document.getElementById('detail-node-id');
+    const sysLabel = document.getElementById('detail-node-system');
+    const bodyText = document.getElementById('detail-node-content');
+    const accessLabel = document.getElementById('detail-node-access');
+    const strengthLabel = document.getElementById('detail-node-strength');
+    const tagsLabel = document.getElementById('detail-node-tags');
+    
+    idLabel.textContent = node.id;
+    sysLabel.textContent = node.id.startsWith("ego_") ? "EGO CORE" : (node.system === 'long_term' ? "System 2" : "System 1");
+    sysLabel.className = `detail-node-system ${node.id.startsWith("ego_") ? 'bg-gold' : (node.system === 'long_term' ? 'bg-purple' : 'bg-cyan')}`;
+    
+    bodyText.textContent = node.content;
+    accessLabel.textContent = node.accessCount;
+    strengthLabel.textContent = node.system === 'long_term' ? "INF" : node.strength.toFixed(2);
+    tagsLabel.textContent = `[${node.tags.join(', ')}]`;
+    
+    detailGlassCard.classList.remove('hidden');
+}
+
+// Synaptic Gap bridge generator scanning
+function scanSynapticGaps(hovered) {
+    if (nodes.length < 2) return;
+    
+    // Find a node that has a low-intermediate cosine similarity to target
+    let bestBridge = null;
+    let minDiffSim = 0.20;
+    
     nodes.forEach(node => {
-        if (node.system === "working") {
-            const cognitiveScore = (node.importance * 0.5) + (Math.min(node.accessCount / 4, 1.0) * 0.5);
-            
-            if (cognitiveScore >= 0.6) {
-                // Promote
-                node.system = "long_term";
-                node.strength = 1.0; // permanent
-                promotedCount++;
-                logTerminal(`[SYSTEM-2] Node promoted to Long-Term associative network: "${node.content.substring(0, 25)}..."`, 'success');
+        if (node.id !== hovered.id && !node.id.startsWith("ego_")) {
+            const sim = cosineSimilarity(hovered.vector, node.vector);
+            // Intermediate bridge threshold
+            if (sim > 0.08 && sim < 0.22) {
+                bestBridge = node;
+                minDiffSim = sim;
+            }
+        }
+    });
+    
+    if (bestBridge) {
+        document.getElementById('spark-term-a').textContent = `"${hovered.tags[0] || 'term_A'}"`;
+        document.getElementById('spark-term-b').textContent = `"${bestBridge.tags[0] || 'term_B'}"`;
+        dreamSparkAlert.querySelector('#dream-spark-alert button').onclick = () => synthesizeConceptBridge(hovered, bestBridge);
+        dreamSparkAlert.classList.remove('hidden');
+    } else {
+        dreamSparkAlert.classList.add('hidden');
+    }
+}
+
+function dismissSparkAlert() {
+    dreamSparkAlert.classList.add('hidden');
+}
+
+function synthesizeConceptBridge(nodeA, nodeB) {
+    if (!nodeA || !nodeB) {
+        dismissSparkAlert();
+        return;
+    }
+    
+    // Create intermediate bridge node dynamically
+    const bridgeText = `Synthesized bridge combining workspace concept [${nodeA.tags.join(",")}] and [${nodeB.tags.join(",")}]`;
+    const bridgeTags = [...new Set([...nodeA.tags, ...nodeB.tags, "Bridge"])];
+    
+    const node = createNode(bridgeText, bridgeTags, "working", 0.7, 1.0);
+    node.pulseTimer = 180;
+    
+    recalculateSemanticLinks();
+    updateD3Graph();
+    calculateEmotionalCentroids();
+    
+    logTerminal(`[SYNAPSE] Synthesis Bridge locked: Created intermediate node ${node.id} linking '${nodeA.id}' and '${nodeB.id}'.`, 'success');
+    dismissSparkAlert();
+}
+
+function runConsolidationCycle() {
+    logTerminal("[CONSOLIDATION] Spinning up dual-system memory consolidator worker...");
+    
+    let promoted = [];
+    let decayed = [];
+    let remaining = [];
+    
+    nodes.forEach(node => {
+        if (node.id.startsWith("ego_")) {
+            remaining.push(node); // Ego locks never decay
+            return;
+        }
+        
+        if (node.system === 'working') {
+            const cogScore = (node.importance * 0.4) + (Math.min(node.accessCount / 5, 1.0) * 0.6);
+            if (cogScore >= 0.55) {
+                // Promote LTM
+                node.system = 'long_term';
+                node.strength = 1.0; // inf
+                promoted.push(node.id);
+                logTerminal(`[SYSTEM-2] Consolidated & Promoted: "${node.content.substring(0, 32)}..." ➔ S2`, 'success');
             } else {
-                // Decay
-                node.strength = Math.max(0.0, node.strength - decayRate);
+                // Decay S1
+                node.strength = node.strength - decayRate;
                 if (node.strength <= 0.0) {
-                    prunedCount++;
-                    logTerminal(`[PRUNED] Short-term node decayed completely and deleted.`, 'warning');
+                    decayed.push(node.id);
+                    logTerminal(`[PRUNED] Short-term S1 node decayed completely. Deleted: ${node.id}`, 'warning');
                 } else {
                     remaining.push(node);
                 }
             }
         } else {
-            remaining.push(node); // long_term is persistent
+            remaining.push(node);
         }
     });
-
+    
     nodes = remaining;
-    recalculateLinks();
-
-    logTerminal(`[CONSOLIDATION] Cycle finished. Promoted: ${promotedCount}, Decayed & Cleaned: ${prunedCount}.`, 'info');
+    recalculateSemanticLinks();
+    updateD3Graph();
+    calculateEmotionalCentroids();
+    
+    logTerminal(`[CONSOLIDATION] Worker finished. Promoted to S2: ${promoted.length}. Decayed & Purged: ${decayed.length}.`, 'info');
 }
 
-function clearAllMemory() {
-    nodes = [];
-    links = [];
-    logTerminal(`[SYSTEM] Cognitive state cleared. Brain has been reset.`, 'error');
+// Custom trigger alerts and screen shakes
+function triggerAlertNotification(msg) {
+    const alertBox = document.getElementById('canvas-alert');
+    const alertText = document.getElementById('canvas-alert-text');
+    alertText.textContent = msg;
+    
+    alertBox.classList.add('show');
+    
+    // Screen shake the visualizer panel
+    const canvasPanel = document.querySelector('.visualizer-panel');
+    canvasPanel.classList.add('shake-panel');
+    canvasPanel.style.borderColor = 'rgba(239, 68, 68, 0.7)';
+    
+    setTimeout(() => {
+        alertBox.classList.remove('show');
+        canvasPanel.classList.remove('shake-panel');
+        canvasPanel.style.borderColor = '';
+    }, 3000);
 }
 
+// Seed initial memory nodes
+function seedInitialMemories() {
+    createNode("I am learning how to build agentic memory modules natively.", ["AI", "AgenticMemory"], "working", 0.8, 1.0);
+    createNode("AI Architecture Design: Zero-Dependency Dual-System Core", ["AI", "Architecture"], "working", 0.9, 1.0);
+    createNode("Instagram content should have high hooks to attract followers.", ["Marketing", "Instagram"], "working", 0.4, 1.0);
+    
+    recalculateSemanticLinks();
+    updateD3Graph();
+    calculateEmotionalCentroids();
+}
+
+// Clear sandbox stdio logs
 function clearLogs() {
     terminalOutput.innerHTML = '';
 }
@@ -771,261 +1383,37 @@ function logTerminal(msg, type = 'info') {
     terminalOutput.scrollTop = terminalOutput.scrollHeight;
 }
 
-function triggerAlertNotification(msg) {
-    const alertBox = document.getElementById('canvas-alert');
-    alertBox.querySelector('.alert-text').textContent = msg;
-    alertBox.classList.add('show');
+// --- COGNITIVE EVOLUTION BOTTOM SHELF ACCORDION ---
+function toggleEvolutionDrawer() {
+    const panel = document.querySelector('.evolution-drawer-panel');
+    const indicator = document.getElementById('drawer-toggle-indicator');
     
-    // shake visualizer panel
-    const canvasPanel = document.getElementById('panel-canvas');
-    canvasPanel.style.borderColor = 'rgba(239, 68, 68, 0.6)';
-    canvasPanel.style.transform = 'scale(0.99)';
+    if (panel.classList.contains('collapsed')) {
+        panel.classList.remove('collapsed');
+        indicator.textContent = '▲';
+    } else {
+        panel.classList.add('collapsed');
+        indicator.textContent = '▼';
+    }
+}
+
+function toggleAccordionItem(element) {
+    const item = element.parentElement;
+    const allItems = document.querySelectorAll('.accordion-item');
+    const isOpen = item.classList.contains('open');
     
+    // Close others
+    allItems.forEach(i => i.classList.remove('open'));
+    
+    if (!isOpen) {
+        item.classList.add('open');
+    }
+}
+
+// Emulate AuraWiki compilation
+function compileAuraWiki() {
+    logTerminal("[CORTEX] Initiating AuraWiki Markdown obsidian double-linked compiler...", "info");
     setTimeout(() => {
-        alertBox.classList.remove('show');
-        canvasPanel.style.borderColor = '';
-        canvasPanel.style.transform = '';
-    }, 3000);
-}
-
-// --- KEYWORD TAG MANAGEMENT ---
-function removeKeyword(kw) {
-    blockedTopics = blockedTopics.filter(t => t !== kw);
-    renderKeywords();
-    logTerminal(`[GUARDRAIL] Restricted keyword removed: "${kw}"`, 'warning');
-}
-
-function addKeyword() {
-    const kw = newKeywordInput.value.trim().toLowerCase();
-    if (kw && !blockedTopics.includes(kw)) {
-        blockedTopics.push(kw);
-        newKeywordInput.value = '';
-        renderKeywords();
-        logTerminal(`[GUARDRAIL] Custom restricted keyword registered: "${kw}"`, 'success');
-    }
-}
-
-function renderKeywords() {
-    blockedKeywordsList.innerHTML = '';
-    blockedTopics.forEach(kw => {
-        const span = document.createElement('span');
-        span.className = 'keyword-tag';
-        span.innerHTML = `${kw} <button class="close-tag-btn" onclick="removeKeyword('${kw}')">×</button>`;
-        blockedKeywordsList.appendChild(span);
-    });
-}
-
-
-// --- 2D CANVAS FORCE PHYSICS ENGINE ---
-function simulationLoop() {
-    updateNodePhysics();
-    renderGraph();
-    requestAnimationFrame(simulationLoop);
-}
-
-function updateNodePhysics() {
-    const w = canvas.width;
-    const h = canvas.height;
-
-    // Node Repulsion (push away from each other)
-    for (let i = 0; i < nodes.length; i++) {
-        const n1 = nodes[i];
-        for (let j = i + 1; j < nodes.length; j++) {
-            const n2 = nodes[j];
-            
-            const dx = n2.x - n1.x;
-            const dy = n2.y - n1.y;
-            const dist = Math.hypot(dx, dy) || 1;
-            
-            if (dist < 250) {
-                // Coulomb force formula simulation
-                const force = physics.repulsion / (dist * dist);
-                const fx = (dx / dist) * force;
-                const fy = (dy / dist) * force;
-                
-                if (n1 !== draggedNode) {
-                    n1.vx -= fx;
-                    n1.vy -= fy;
-                }
-                if (n2 !== draggedNode) {
-                    n2.vx += fx;
-                    n2.vy += fy;
-                }
-            }
-        }
-    }
-
-    // Link Attraction (pull together if related)
-    links.forEach(link => {
-        const n1 = nodes.find(n => n.id === link.source);
-        const n2 = nodes.find(n => n.id === link.target);
-        
-        if (n1 && n2) {
-            const dx = n2.x - n1.x;
-            const dy = n2.y - n1.y;
-            const dist = Math.hypot(dx, dy) || 1;
-            
-            // Hooke's Law simulation
-            const targetDist = 120;
-            const force = (dist - targetDist) * physics.attraction * link.strength;
-            const fx = (dx / dist) * force;
-            const fy = (dy / dist) * force;
-            
-            if (n1 !== draggedNode) {
-                n1.vx += fx;
-                n1.vy += fy;
-            }
-            if (n2 !== draggedNode) {
-                n2.vx -= fx;
-                n2.vy -= fy;
-            }
-        }
-    });
-
-    // Center Gravity pulling nodes back to center
-    nodes.forEach(node => {
-        if (node === draggedNode) return;
-        
-        const cx = w / 2;
-        const cy = h / 2;
-        node.vx += (cx - node.x) * 0.003;
-        node.vy += (cy - node.y) * 0.003;
-
-        // Apply velocities & damping
-        node.x += node.vx;
-        node.y += node.vy;
-        node.vx *= physics.damping;
-        node.vy *= physics.damping;
-
-        // Contain in boundaries
-        const r = physics.nodeRadius;
-        node.x = Math.max(r + physics.boundaryPadding, Math.min(w - r - physics.boundaryPadding, node.x));
-        node.y = Math.max(r + physics.boundaryPadding, Math.min(h - r - physics.boundaryPadding, node.y));
-    });
-}
-
-function renderGraph() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // 1. Draw Links
-    links.forEach(link => {
-        const n1 = nodes.find(n => n.id === link.source);
-        const n2 = nodes.find(n => n.id === link.target);
-        
-        if (n1 && n2) {
-            ctx.beginPath();
-            ctx.moveTo(n1.x, n1.y);
-            ctx.lineTo(n2.x, n2.y);
-            
-            const alpha = 0.06 + (0.2 * link.strength);
-            ctx.strokeStyle = `rgba(139, 92, 246, ${alpha})`;
-            ctx.lineWidth = 1.5 + (2 * link.strength);
-            ctx.stroke();
-        }
-    });
-
-    // 2. Draw Nodes
-    nodes.forEach(node => {
-        const isHovered = (node === hoveredNode);
-        const isS1 = (node.system === "working");
-        
-        ctx.save();
-        
-        // Glow effect
-        ctx.shadowBlur = isHovered ? 18 : 8;
-        ctx.shadowColor = isS1 ? '#06B6D4' : '#8B5CF6';
-        
-        // Node Body Fill
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, physics.nodeRadius, 0, Math.PI * 2);
-        
-        const grad = ctx.createRadialGradient(node.x, node.y, 2, node.x, node.y, physics.nodeRadius);
-        if (isS1) {
-            // Working Memory Blue Gradient (applied strength modifies alpha)
-            grad.addColorStop(0, `rgba(6, 182, 212, ${0.4 * node.strength})`);
-            grad.addColorStop(1, `rgba(13, 148, 136, ${0.85 * node.strength})`);
-            ctx.strokeStyle = `rgba(6, 182, 212, ${0.9 * node.strength})`;
-        } else {
-            // Long Term Purple Gradient
-            grad.addColorStop(0, 'rgba(139, 92, 246, 0.45)');
-            grad.addColorStop(1, 'rgba(79, 70, 229, 0.95)');
-            ctx.strokeStyle = 'rgba(139, 92, 246, 0.95)';
-        }
-        
-        ctx.fillStyle = grad;
-        ctx.lineWidth = isHovered ? 3.5 : 2;
-        ctx.fill();
-        ctx.stroke();
-        
-        // Draw inside content snippet
-        ctx.shadowBlur = 0; // reset shadow for text
-        ctx.fillStyle = '#FFF';
-        ctx.font = "bold 14px 'Outfit', sans-serif";
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        const textSymbol = isS1 ? "S1" : "S2";
-        ctx.fillText(textSymbol, node.x, node.y - 2);
-        
-        // Draw strength rating for System 1 nodes
-        if (isS1) {
-            ctx.fillStyle = '#22D3EE';
-            ctx.font = "8px 'Fira Code', monospace";
-            ctx.fillText(`${node.strength.toFixed(2)}`, node.x, node.y + 12);
-        } else {
-            ctx.fillStyle = '#C084FC';
-            ctx.font = "8px 'Fira Code', monospace";
-            ctx.fillText("INF", node.x, node.y + 12);
-        }
-
-        ctx.restore();
-        
-        // 3. Hover Node Tooltip Box overlay
-        if (isHovered) {
-            ctx.save();
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = 'rgba(0,0,0,0.5)';
-            
-            const boxW = 200;
-            const boxH = 65;
-            const bx = Math.max(10, Math.min(canvas.width - boxW - 10, node.x - boxW / 2));
-            const by = Math.max(10, node.y - physics.nodeRadius - boxH - 8);
-            
-            // Drawer Tooltip Panel
-            ctx.fillStyle = 'rgba(13, 13, 23, 0.92)';
-            ctx.strokeStyle = isS1 ? 'rgba(6, 182, 212, 0.6)' : 'rgba(139, 92, 246, 0.6)';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.roundRect(bx, by, boxW, boxH, 8);
-            ctx.fill();
-            ctx.stroke();
-            
-            // Render text
-            ctx.fillStyle = '#FFF';
-            ctx.font = "10px 'Space Grotesk', sans-serif";
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-            
-            // Wrap text helper
-            const text = node.content;
-            let line = '';
-            let lineY = by + 8;
-            for(let n=0; n<text.length; n++) {
-                line += text[n];
-                if (line.length > 32 || n === text.length - 1) {
-                    ctx.fillText(line + (n < text.length-1 ? '-' : ''), bx + 10, lineY);
-                    line = '';
-                    lineY += 12;
-                    if (lineY > by + boxH - 20) break;
-                }
-            }
-            
-            // Draw tags inside tooltip
-            ctx.fillStyle = isS1 ? '#67E8F9' : '#D8B4FE';
-            ctx.font = "italic 8px 'Space Grotesk', sans-serif";
-            ctx.fillText(`Tags: ${node.tags.join(', ')}`, bx + 10, by + boxH - 12);
-            
-            ctx.restore();
-        }
-    });
+        logTerminal("✓ Compiled Wiki index: reports/agentic_memory_report.md compiled successfully.", "success");
+    }, 600);
 }

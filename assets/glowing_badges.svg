@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="40" viewBox="0 0 800 40" fill="none">
+    <defs>
+        <linearGradient id="neon-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#06B6D4"/>
+            <stop offset="100%" stop-color="#0D9488"/>
+        </linearGradient>
+        <linearGradient id="neon-purple" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#8B5CF6"/>
+            <stop offset="100%" stop-color="#6D28D9"/>
+        </linearGradient>
+        <linearGradient id="neon-pink" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#EC4899"/>
+            <stop offset="100%" stop-color="#BE185D"/>
+        </linearGradient>
+        <filter id="badge-glow" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="2" result="blur"/>
+            <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+    </defs>
+
+    <!-- Badge 1: Version -->
+    <g transform="translate(0, 5)">
+        <rect width="130" height="30" rx="6" fill="#0B0B1E" stroke="url(#neon-purple)" stroke-width="1" filter="url(#badge-glow)"/>
+        <text x="65" y="19" font-family="'Space Grotesk', sans-serif" font-size="10" font-weight="700" fill="#A78BFA" text-anchor="middle">VERSION: v1.1.9</text>
+    </g>
+
+    <!-- Badge 2: Latency -->
+    <g transform="translate(145, 5)">
+        <rect width="160" height="30" rx="6" fill="#0B0B1E" stroke="url(#neon-cyan)" stroke-width="1" filter="url(#badge-glow)"/>
+        <text x="80" y="19" font-family="'Space Grotesk', sans-serif" font-size="10" font-weight="700" fill="#22D3EE" text-anchor="middle">LATENCY: &lt; 0.6104ms</text>
+    </g>
+
+    <!-- Badge 3: Dependencies -->
+    <g transform="translate(320, 5)">
+        <rect width="140" height="30" rx="6" fill="#0B0B1E" stroke="url(#neon-pink)" stroke-width="1" filter="url(#badge-glow)"/>
+        <text x="70" y="19" font-family="'Space Grotesk', sans-serif" font-size="10" font-weight="700" fill="#F472B6" text-anchor="middle">DEPS: PURE PYTHON</text>
+    </g>
+
+    <!-- Badge 4: MCP Status -->
+    <g transform="translate(475, 5)">
+        <rect width="140" height="30" rx="6" fill="#0B0B1E" stroke="url(#neon-purple)" stroke-width="1" filter="url(#badge-glow)"/>
+        <text x="70" y="19" font-family="'Space Grotesk', sans-serif" font-size="10" font-weight="700" fill="#C084FC" text-anchor="middle">MCP: STDIO GATE</text>
+    </g>
+
+    <!-- Badge 5: Security Shield -->
+    <g transform="translate(630, 5)">
+        <rect width="170" height="30" rx="6" fill="#0B0B1E" stroke="url(#neon-cyan)" stroke-width="1" filter="url(#badge-glow)"/>
+        <text x="85" y="19" font-family="'Space Grotesk', sans-serif" font-size="10" font-weight="700" fill="#38BDF8" text-anchor="middle">SECURITY: PII-SHIELD</text>
+    </g>
+</svg>

@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA Memory - Sovereign Cognitive Console</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- D3.js for Cognitive Force Graphs -->
+    <script src="https://cdn.d3js.org/d3.v7.min.js"></script>
+    <!-- Outfit & Inter Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #0b0f19;
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(6, 182, 212, 0.08) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        .glass-panel-hover:hover {
+            border-color: rgba(6, 182, 212, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(6, 182, 212, 0.15);
+            transform: translateY(-2px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ambient-cyan-glow {
+            box-shadow: 0 0 25px 2px rgba(6, 182, 212, 0.25);
+        }
+
+        .ambient-purple-glow {
+            box-shadow: 0 0 25px 2px rgba(139, 92, 246, 0.25);
+        }
+
+        /* Monospace terminal styling */
+        .terminal-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: rgba(6, 182, 212, 0.3);
+            border-radius: 3px;
+        }
+
+        /* Pulsing glows for long term nodes */
+        @keyframes pulse-purple {
+            0% { filter: drop-shadow(0 0 2px rgba(139, 92, 246, 0.6)); }
+            50% { filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.9)); }
+            100% { filter: drop-shadow(0 0 2px rgba(139, 92, 246, 0.6)); }
+        }
+        .ltm-node-glow {
+            animation: pulse-purple 2s infinite ease-in-out;
+        }
+        
+        .custom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #06b6d4;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.8);
+            border: 2px solid #ffffff;
+        }
+    </style>
+</head>
+<body class="h-full font-sans text-gray-200 overflow-hidden">
+
+    <!-- MAIN CONSOLE LAYOUT -->
+    <div class="flex h-full flex-col">
+        <!-- HEADER NAVBAR -->
+        <header class="flex items-center justify-between px-6 py-4 glass-panel border-b border-gray-800">
+            <div class="flex items-center space-x-3">
+                <div class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-purple-600 shadow-lg shadow-cyan-500/20">
+                    <i class="fa-solid fa-brain text-white text-lg"></i>
+                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+                    </span>
+                </div>
+                <div>
+                    <h1 class="font-outfit text-xl font-extrabold tracking-wide bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">AURA MEMORY</h1>
+                    <p class="text-xs text-cyan-500/80 font-mono tracking-widest font-semibold">SOVEREIGN COGNITIVE CONSOLE</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div id="mcpStatusBadge" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-xs font-mono font-semibold text-emerald-400">MCP ACTIVE</span>
+                </div>
+                <button onclick="openOnboarding()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition-all duration-300">
+                    <i class="fa-solid fa-compass mr-1.5"></i> Setup Guide
+                </button>
+            </div>
+        </header>
+
+        <!-- CONTAINER BODY -->
+        <div class="flex flex-1 overflow-hidden">
+            <!-- PANEL 2: SOVEREIGN AGENT LIBRARY (LEFT SIDEBAR) -->
+            <aside class="w-80 glass-panel border-r border-gray-800 flex flex-col justify-between">
+                <div class="p-5 flex flex-col flex-1 overflow-y-auto space-y-6">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                        <h2 class="font-outfit text-md font-bold text-gray-100 tracking-wide">
+                            <i class="fa-solid fa-users-gear text-cyan-500 mr-2"></i>Agent Workspaces
+                        </h2>
+                        <button onclick="openCreateAgentModal()" class="w-7 h-7 flex items-center justify-center rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition-all">
+                            <i class="fa-solid fa-plus text-xs"></i>
+                        </button>
+                    </div>
+
+                    <!-- AGENTS LIST CONTAINER -->
+                    <div id="agentsContainer" class="space-y-3">
+                        <!-- Dynamic content injected here -->
+                    </div>
+                    
+                    <!-- SYSTEM SUMMARY CARD -->
+                    <div class="p-4 rounded-xl bg-gray-900/50 border border-gray-800 flex flex-col space-y-3">
+                        <h3 class="text-xs font-bold text-cyan-500 font-mono tracking-wider uppercase">Active Storage Config</h3>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-gray-400">Primary Engine:</span>
+                            <span id="sysEngine" class="font-mono text-cyan-400 font-bold">SQLITE (PATH B)</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-gray-400">Database Size:</span>
+                            <span id="sysDBSize" class="font-mono text-gray-300">32.4 KB</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-gray-400">Biological Decay:</span>
+                            <span id="sysDecayRate" class="font-mono text-gray-300">1.2x sweep</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTROLS FOOTER -->
+                <div class="p-4 border-t border-gray-800 bg-gray-900/30 space-y-2">
+                    <button onclick="triggerCompactionSweep()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white font-outfit text-xs font-semibold tracking-wider transition-all duration-300 shadow-md shadow-cyan-500/15">
+                        <i class="fa-solid fa-bolt-lightning mr-2"></i>Run Consolidation Sweep
+                    </button>
+                    <button onclick="triggerAuraWikiExport()" class="w-full py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 font-outfit text-xs font-semibold tracking-wider transition-all">
+                        <i class="fa-solid fa-book-bookmark mr-2 text-purple-400"></i>Export to AuraWiki
+                    </button>
+                </div>
+            </aside>
+
+            <!-- CENTER WORKSPACE -->
+            <main class="flex-1 flex flex-col overflow-hidden relative">
+                <!-- TOP BAR FOR ACTIVE AGENT METRICS -->
+                <div class="px-6 py-4 glass-panel border-b border-gray-800 flex justify-between items-center bg-gray-900/10">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-3 w-3 rounded-full bg-cyan-500 ambient-cyan-glow"></div>
+                        <span class="font-outfit font-bold text-gray-100" id="activeAgentHeader">Claude Desktop Co-worker</span>
+                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono" id="activeAgentNS">namespace: default</span>
+                    </div>
+                    <div class="flex items-center space-x-6 text-xs">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-400">WM Nodes:</span>
+                            <span class="font-mono text-cyan-400 font-semibold" id="activeWMCount">4</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-400">LTM Nodes:</span>
+                            <span class="font-mono text-purple-400 font-semibold" id="activeLTMCount">2</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PANEL 4: CONCEPT SYNAPSE WEB (D3 FORCE CANVAS) -->
+                <div class="flex-1 relative overflow-hidden" id="canvasContainer">
+                    <div class="absolute inset-0 z-0 bg-grid-pattern"></div>
+                    <svg id="forceGraph" class="w-full h-full relative z-10 select-none"></svg>
+
+                    <!-- FLOATING DETAIL CARD / GLASS DRAWER -->
+                    <div id="nodeDetailCard" class="absolute bottom-6 left-6 z-20 w-80 glass-panel p-5 rounded-2xl hidden transition-all duration-300">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex space-x-2">
+                                <span id="nodeSysTag" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">WM:1.0</span>
+                                <span id="nodeEgoTag" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 hidden">EGO Core</span>
+                            </div>
+                            <button onclick="closeNodeDetail()" class="text-gray-500 hover:text-gray-300"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <p id="nodeContentText" class="text-sm text-gray-100 font-outfit mb-4">Claude Desktop Co-work agent uses standard MCP protocol to query memory.</p>
+                        
+                        <div class="border-t border-gray-800 pt-3 space-y-2.5 text-xs text-gray-400">
+                            <div class="flex justify-between">
+                                <span>Concept ID:</span>
+                                <span id="nodeIDText" class="font-mono text-gray-300">3a2c4e5f</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Access Frequency:</span>
+                                <span id="nodeAccessText" class="font-mono text-cyan-400">3 recalls</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Blended Tags:</span>
+                                <span id="nodeTagsText" class="font-mono text-gray-300 font-semibold">AI, mcp, desktop</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Cognitive Importance:</span>
+                                <span id="nodeImportanceText" class="font-mono text-purple-400 font-semibold">0.85</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FLOATING SYNAPTIC DREAM SPARK ALERT -->
+                    <div id="dreamSparkAlert" class="absolute top-6 right-6 z-20 w-96 glass-panel p-4 rounded-2xl border border-purple-500/30 shadow-lg shadow-purple-500/10 flex flex-col space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-xs font-bold text-purple-400 font-mono tracking-wider uppercase">
+                                <i class="fa-solid fa-wand-magic-sparkles mr-1.5 animate-pulse"></i>Synaptic Gap Dream Spark
+                            </h4>
+                            <button onclick="dismissDreamAlert()" class="text-gray-500 hover:text-gray-300"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <p class="text-xs text-gray-300 font-outfit" id="dreamPromptText">
+                            How does <strong>'Local SQLite operations'</strong> relate to <strong>'Sub-linear KD-Tree vector queries'</strong>? Let's dream a cognitive bridge link.
+                        </p>
+                        <div class="flex justify-between items-center pt-2">
+                            <span class="text-[10px] text-gray-500 font-mono font-semibold" id="dreamSimText">Similarity: 0.145</span>
+                            <button onclick="synthesizeBridge()" class="px-3 py-1.5 text-[10px] font-bold rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 transition-all">
+                                <i class="fa-solid fa-infinity mr-1"></i>Synthesize Bridge
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- RIGHT PANEL: COGNITIVE CONTROLS & EVOLUTION FEED -->
+            <aside class="w-[28rem] glass-panel border-l border-gray-800 flex flex-col overflow-hidden">
+                <!-- TABS HEADERS -->
+                <div class="flex border-b border-gray-800 text-sm font-outfit font-semibold tracking-wide">
+                    <button onclick="switchRightTab('controls')" id="tabBtnControls" class="flex-1 py-3 text-center border-b-2 border-cyan-500 text-cyan-400 bg-gray-900/10 transition-all duration-300">
+                        <i class="fa-solid fa-sliders mr-2"></i>Affective Mood
+                    </button>
+                    <button onclick="switchRightTab('evolution')" id="tabBtnEvolution" class="flex-1 py-3 text-center border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition-all duration-300">
+                        <i class="fa-solid fa-clock-rotate-left mr-2"></i>Cognitive Evolution
+                    </button>
+                </div>
+
+                <!-- RIGHT CONTENT CONTAINER -->
+                <div class="flex-1 overflow-y-auto p-6" id="rightTabsContent">
+                    
+                    <!-- TAB 1: COGNITIVE CONTROLS (MOOD & SEEDING) -->
+                    <div id="tabContentControls" class="space-y-8">
+                        <!-- MOOD COORDINATES (AFFECTIVE STATE) -->
+                        <div class="space-y-4">
+                            <h3 class="text-xs font-bold text-cyan-500 font-mono tracking-wider uppercase">Panel 3: Affective Mood Coordinates</h3>
+                            <div class="space-y-4 p-4 rounded-2xl bg-gray-900/40 border border-gray-800/80">
+                                <!-- Dial/Slider representation -->
+                                <div class="space-y-3">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-300"><i class="fa-solid fa-brain mr-2 text-cyan-500"></i>Curiosity</span>
+                                        <span id="valCuriosity" class="font-mono text-cyan-400 font-bold">0.85</span>
+                                    </div>
+                                    <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                                        <div id="barCuriosity" class="bg-cyan-500 h-full rounded-full transition-all duration-500" style="width: 85%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-300"><i class="fa-solid fa-shield-halved mr-2 text-red-500"></i>Caution</span>
+                                        <span id="valCaution" class="font-mono text-red-400 font-bold">0.25</span>
+                                    </div>
+                                    <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                                        <div id="barCaution" class="bg-red-500 h-full rounded-full transition-all duration-500" style="width: 25%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-300"><i class="fa-solid fa-users mr-2 text-purple-500"></i>Sociability</span>
+                                        <span id="valSociability" class="font-mono text-purple-400 font-bold">0.40</span>
+                                    </div>
+                                    <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                                        <div id="barSociability" class="bg-purple-500 h-full rounded-full transition-all duration-500" style="width: 40%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-300"><i class="fa-solid fa-crown mr-2 text-amber-500"></i>Sovereignty</span>
+                                        <span id="valSovereignty" class="font-mono text-amber-400 font-bold">0.70</span>
+                                    </div>
+                                    <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                                        <div id="barSovereignty" class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 70%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-300"><i class="fa-solid fa-palette mr-2 text-emerald-500"></i>Creativity</span>
+                                        <span id="valCreativity" class="font-mono text-emerald-400 font-bold">0.62</span>
+                                    </div>
+                                    <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                                        <div id="barCreativity" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 62%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SLIDER TO SIMULATE TRIGGER TOPICS -->
+                        <div class="space-y-4">
+                            <h3 class="text-xs font-bold text-cyan-500 font-mono tracking-wider uppercase">Trigger Simulator Slider</h3>
+                            <div class="p-4 rounded-2xl bg-gray-900/40 border border-gray-800/80 space-y-3">
+                                <input type="range" min="0" max="100" value="30" class="w-full accent-cyan-500 custom-slider h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer" id="triggerSlider" oninput="handleSliderChange(this.value)">
+                                <div class="flex justify-between text-[10px] text-gray-500 font-mono">
+                                    <span>Malicious Threat Mode</span>
+                                    <span>Idle Balancing</span>
+                                    <span>Creative Research Mode</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- EGO SEED CONFIGURATION -->
+                        <div class="space-y-4">
+                            <h3 class="text-xs font-bold text-cyan-500 font-mono tracking-wider uppercase">Seed core ego beliefs</h3>
+                            <div class="p-5 rounded-2xl bg-gray-900/40 border border-gray-800 space-y-4">
+                                <p class="text-xs text-gray-400 leading-relaxed font-outfit">
+                                    Seeding core un-decayable identity beliefs locks high-importance memories from decay sweeps, forming the immutable character coordinates for this agent.
+                                </p>
+                                <div class="space-y-3">
+                                    <input type="text" id="egoBeliefInput" placeholder="I protect sovereign user data above all else." class="w-full px-4 py-2.5 text-xs rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 focus:border-cyan-500/50 focus:outline-none transition-all duration-300">
+                                    <button onclick="commitEgoBelief()" class="w-full py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-semibold tracking-wider transition-all">
+                                        <i class="fa-solid fa-heart mr-2"></i>Seed Core Identity belief
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MANUAL INGESTION PANEL -->
+                        <div class="space-y-4">
+                            <h3 class="text-xs font-bold text-cyan-500 font-mono tracking-wider uppercase">Ingest Memory Node</h3>
+                            <div class="p-5 rounded-2xl bg-gray-900/40 border border-gray-800 space-y-4">
+                                <div class="space-y-3">
+                                    <textarea id="manualMemoryInput" rows="3" placeholder="Type a memory node to commit..." class="w-full px-4 py-2.5 text-xs rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 focus:border-cyan-500/50 focus:outline-none transition-all duration-300 resize-none"></textarea>
+                                    
+                                    <div class="flex space-x-2">
+                                        <input type="text" id="manualTagsInput" placeholder="Tags (comma split)" class="flex-1 px-4 py-2.5 text-xs rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 focus:border-cyan-500/50 focus:outline-none transition-all">
+                                        <input type="number" id="manualImportanceInput" min="0.0" max="1.0" step="0.1" value="0.6" class="w-20 px-3 py-2.5 text-xs text-center rounded-xl bg-gray-900 border border-gray-800 focus:outline-none focus:border-cyan-500/50 font-mono">
+                                    </div>
+
+                                    <button onclick="commitManualMemory()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white font-outfit text-xs font-semibold tracking-wider transition-all duration-300">
+                                        <i class="fa-solid fa-plus mr-1.5"></i>Commit Memory
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: COGNITIVE EVOLUTION REPORT VIEWER -->
+                    <div id="tabContentEvolution" class="space-y-6 hidden">
+                        <h3 class="text-xs font-bold text-cyan-500 font-mono tracking-wider uppercase">Cognitive Evolution & Document Review</h3>
+                        <p class="text-xs text-gray-400 leading-relaxed font-outfit">
+                            Observe how the agent's core codebase, architecture, and memory schemas are growing together in your system. Review changes dynamically detailing the context of Why, What, and How.
+                        </p>
+
+                        <!-- DOCUMENTS SHELF LIST -->
+                        <div class="space-y-4" id="reportViewerShelf">
+                            <!-- Dynamic Injection of Reports -->
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- FOOTER: MONOSPACE JSON FEED PANEL -->
+        <footer class="h-44 glass-panel border-t border-gray-800 flex flex-col">
+            <div class="flex items-center justify-between px-6 py-2 border-b border-gray-800 bg-gray-900/30">
+                <span class="text-xs font-mono font-bold tracking-wider text-cyan-400"><i class="fa-solid fa-code mr-1.5"></i>Live JSON-RPC 2.0 Transmission Feed</span>
+                <button onclick="clearTerminalLogs()" class="text-gray-500 hover:text-gray-300 text-[10px] font-semibold"><i class="fa-solid fa-trash mr-1"></i>Clear Logs</button>
+            </div>
+            <div id="terminalLog" class="flex-1 p-4 font-mono text-[10px] text-emerald-400 overflow-y-auto space-y-1 bg-black/45 terminal-scroll">
+                <!-- Live logs -->
+            </div>
+        </footer>
+    </div>
+
+    <!-- ONBOARDING SETUP STEPPER MODAL OVERLAY -->
+    <div id="onboardingOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md transition-all duration-500 p-6 hidden">
+        <div class="w-[44rem] glass-panel rounded-3xl overflow-hidden border border-cyan-500/20 shadow-2xl shadow-cyan-500/10 flex flex-col max-h-full">
+            <!-- Stepper Progress Header -->
+            <div class="px-8 py-5 border-b border-gray-800 flex items-center justify-between bg-gray-900/30">
+                <span class="font-outfit font-extrabold text-gray-100 tracking-wide">Aura Memory: Interactive Onboarding Setup</span>
+                <span id="stepperStepCounter" class="text-xs font-mono text-cyan-400 font-semibold px-2 py-0.5 rounded bg-cyan-400/10 border border-cyan-400/25">Step 1 of 4</span>
+            </div>
+
+            <!-- Steps Container -->
+            <div class="flex-1 overflow-y-auto p-8 font-outfit" id="stepperBody">
+                <!-- STEP 1: Profiler Questionnaire -->
+                <div id="stepCard1" class="space-y-6">
+                    <h3 class="text-lg font-bold text-gray-100"><i class="fa-solid fa-cog mr-2 text-cyan-500"></i>Storage Profiler Functional Questionnaire</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">
+                        To align Aura Memory to your system architecture, let's profiles your operational parameters. Select the settings that best describe your environment.
+                    </p>
+
+                    <!-- Question Blocks -->
+                    <div class="space-y-5">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-cyan-500 font-mono tracking-wide">1. Target Deployment Environment:</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <button onclick="selectProfileOption('env', 'edge')" id="optEnvEdge" class="p-4 rounded-xl text-left border border-cyan-500/20 bg-cyan-500/5 hover:border-cyan-500/40 transition-all">
+                                    <div class="text-sm font-bold text-cyan-400"><i class="fa-solid fa-plug-circle-check mr-1.5"></i>Edge / WASM Sandbox</div>
+                                    <div class="text-[10px] text-gray-400 mt-1">Mobile apps, Safari/Chrome browser plugins, isolated web vaults.</div>
+                                </button>
+                                <button onclick="selectProfileOption('env', 'desktop')" id="optEnvDesktop" class="p-4 rounded-xl text-left border border-gray-800 bg-gray-900/20 hover:border-gray-700 transition-all">
+                                    <div class="text-sm font-bold text-gray-300"><i class="fa-solid fa-server mr-1.5"></i>Desktop / Server</div>
+                                    <div class="text-[10px] text-gray-500 mt-1">Background IDE agents (Cursor/VS Code), Python daemons, multi-process swarm APIs.</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-cyan-500 font-mono tracking-wide">2. Workload Concurrency:</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <button onclick="selectProfileOption('concurrency', 'single')" id="optConSingle" class="p-4 rounded-xl text-left border border-cyan-500/20 bg-cyan-500/5 hover:border-cyan-500/40 transition-all">
+                                    <div class="text-sm font-bold text-cyan-400"><i class="fa-solid fa-user mr-1.5"></i>Single Agent</div>
+                                    <div class="text-[10px] text-gray-400 mt-1">One process reading/writing to memory at a time. Zero locking overhead.</div>
+                                </button>
+                                <button onclick="selectProfileOption('concurrency', 'multi')" id="optConMulti" class="p-4 rounded-xl text-left border border-gray-800 bg-gray-900/20 hover:border-gray-700 transition-all">
+                                    <div class="text-sm font-bold text-gray-300"><i class="fa-solid fa-cubes mr-1.5"></i>Multi-Agent Swarm</div>
+                                    <div class="text-[10px] text-gray-500 mt-1">Multiple agents, tools, or workers reading and writing simultaneously.</div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Recommendation Card -->
+                <div id="stepCard2" class="space-y-6 hidden">
+                    <h3 class="text-lg font-bold text-gray-100"><i class="fa-solid fa-lightbulb mr-2 text-amber-500"></i>Architectural Recommendation</h3>
+                    
+                    <div class="p-5 rounded-2xl bg-cyan-500/5 border border-cyan-500/20 space-y-3">
+                        <div class="flex items-center space-x-2 text-cyan-400 font-bold">
+                            <i class="fa-solid fa-circle-check text-lg"></i>
+                            <span id="recTitle">Path A (JSONL - Compacting Log) recommended!</span>
+                        </div>
+                        <p class="text-xs text-gray-400 leading-relaxed" id="recReason">
+                            Your edge/sandbox single-agent requirements align perfectly with Path A. This setup remains strictly 100% dependency-free, operates inside WASM frameworks, and writes plain text JSON-line snapshots perfect for Git or browser vaults.
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-cyan-500 font-mono tracking-wide">Generated config profile: core/config.json</label>
+                        <pre class="w-full p-4 rounded-xl bg-black/45 border border-gray-800 text-[11px] font-mono text-cyan-400" id="recJSON">
+{
+  "default_storage_mode": "jsonl",
+  "default_db_path": "data/aura_locker.auradb"
+}
+                        </pre>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Core Ego Seeding -->
+                <div id="stepCard3" class="space-y-6 hidden">
+                    <h3 class="text-lg font-bold text-gray-100"><i class="fa-solid fa-dna mr-2 text-purple-500"></i>Seed Agent Core Ego DNA</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">
+                        Seeding immutable beliefs creates un-decayable core vectors that reside inside the database, shaping the agent's primary values and identity down to 8D calculations.
+                    </p>
+
+                    <div class="space-y-3">
+                        <input type="text" id="stepEgo1" value="I protect user data privacy above all else." class="w-full px-4 py-3 text-xs rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 focus:outline-none focus:border-cyan-500/50">
+                        <input type="text" id="stepEgo2" value="I prefer process-local sovereign computing systems." class="w-full px-4 py-3 text-xs rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 focus:outline-none focus:border-cyan-500/50">
+                        <input type="text" id="stepEgo3" placeholder="Enter a third belief, e.g. I write clean code." class="w-full px-4 py-3 text-xs rounded-xl bg-gray-900 border border-gray-800 hover:border-gray-700 focus:outline-none focus:border-cyan-500/50">
+                    </div>
+                </div>
+
+                <!-- STEP 4: Interactive Handshake Verification Test -->
+                <div id="stepCard4" class="space-y-6 hidden">
+                    <h3 class="text-lg font-bold text-gray-100"><i class="fa-solid fa-vial-circle-check mr-2 text-emerald-500"></i>Self-Test Gateway Verification</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">
+                        Aura Memory runs a series of simulated Model Context Protocol JSON-RPC 2.0 handshake validation checks before concluding onboarding.
+                    </p>
+
+                    <div class="space-y-2" id="verificationLogBox">
+                        <!-- Dynamic verify statuses -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stepper Footer Action Buttons -->
+            <div class="px-8 py-5 border-t border-gray-800 flex justify-between bg-gray-900/30">
+                <button id="stepperBackBtn" onclick="stepperBack()" class="px-5 py-2.5 text-xs font-bold rounded-xl text-gray-400 hover:text-gray-200 transition-all invisible">
+                    Back
+                </button>
+                <button id="stepperNextBtn" onclick="stepperNext()" class="px-6 py-2.5 text-xs font-bold rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white transition-all shadow-md shadow-cyan-500/10">
+                    Next: Recommendation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE NEW AGENT MODAL -->
+    <div id="createAgentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-6 hidden">
+        <div class="w-96 glass-panel rounded-2xl p-6 border border-cyan-500/20 shadow-2xl flex flex-col space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-outfit font-bold text-gray-100">Create Agent Namespace</h3>
+                <button onclick="closeCreateAgentModal()" class="text-gray-500 hover:text-gray-300"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="space-y-3 text-xs">
+                <div class="space-y-1.5">
+                    <label class="text-gray-400 font-semibold">Agent Name</label>
+                    <input type="text" id="newAgentName" placeholder="e.g. VS Code Copilot" class="w-full px-4 py-2 bg-gray-900 border border-gray-800 hover:border-gray-700 focus:outline-none focus:border-cyan-500/50 rounded-xl text-xs">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-gray-400 font-semibold">Workspace Namespace ID</label>
+                    <input type="text" id="newAgentNS" placeholder="e.g. agent_vscode" class="w-full px-4 py-2 bg-gray-900 border border-gray-800 hover:border-gray-700 focus:outline-none focus:border-cyan-500/50 rounded-xl text-xs font-mono">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-gray-400 font-semibold">Vocabulary Profile</label>
+                    <select id="newAgentVocab" class="w-full px-3 py-2 bg-gray-900 border border-gray-800 focus:outline-none focus:border-cyan-500/50 rounded-xl text-xs">
+                        <option value="tech">Tech Startup Profile (Default)</option>
+                        <option value="medical">Healthcare Clinical Profile</option>
+                        <option value="agriculture">Crop Yield Agriculture Profile</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="commitCreateAgent()" class="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white font-outfit text-xs font-semibold transition-all">
+                Create & Switich Workspace
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN SIMULATION LOGIC -->
+    <script>
+        // --- COGNITIVE DATABASE STATE STORAGE (SIMULATOR ENGINE) ---
+        let currentStep = 1;
+        let selectedEnv = 'edge';
+        let selectedConcurrency = 'single';
+        let activeRightTab = 'controls';
+        
+        // Active agents list
+        let agents = [
+            {
+                id: 'default',
+                name: 'Claude Desktop Co-worker',
+                namespace: 'default',
+                storageMode: 'sqlite',
+                dbPath: 'data/aura_locker.db',
+                decayRate: 1.0,
+                vocabulary: 'tech'
+            },
+            {
+                id: 'agent_hermes',
+                name: 'Hermes autonomous pusher',
+                namespace: 'agent_hermes',
+                storageMode: 'jsonl',
+                dbPath: 'data/aura_locker.auradb',
+                decayRate: 1.5,
+                vocabulary: 'tech'
+            }
+        ];
+        let activeAgentId = 'default';
+
+        // Normalized 8D vocabulary profiles mapping to vectors
+        const MOCK_VOCABS = {
+            "tech": [0.6, 0.4, 0.2, 0.1, 0.3, 0.5, 0.8, 0.1],
+            "medical": [0.9, 0.2, 0.1, 0.0, 0.1, 0.1, 0.2, 0.1],
+            "agriculture": [0.3, 0.1, 0.0, 0.0, 0.2, 0.3, 0.1, 0.9]
+        };
+
+        // Static active nodes database mapping agent_ids
+        let database = {
+            "default": [
+                {
+                    id: "n-1",
+                    agent_id: "default",
+                    content: "Claude Desktop Co-work agent uses standard MCP protocol to query memory.",
+                    system: "working",
+                    tags: ["AI", "mcp", "integration"],
+                    importance: 0.85,
+                    strength: 1.0,
+                    access_count: 3,
+                    vector: [0.8, 0.7, 0.2, 0.0, 0.1, 0.3, 0.6, 0.1],
+                    associations: {"n-2": 0.45, "n-3": 0.3, "n-5": 0.15}
+                },
+                {
+                    id: "n-2",
+                    agent_id: "default",
+                    content: "AuraDB implements a zero-dependency local storage compacting engine.",
+                    system: "working",
+                    tags: ["database", "engine", "compact"],
+                    importance: 0.75,
+                    strength: 0.85,
+                    access_count: 2,
+                    vector: [0.1, 0.9, 0.1, 0.0, 0.0, 0.1, 0.4, 0.0],
+                    associations: {"n-1": 0.45, "n-4": 0.2}
+                },
+                {
+                    id: "n-3",
+                    agent_id: "default",
+                    content: "AuraCore incorporates 8D concept vector similarities down to cosine metrics.",
+                    system: "working",
+                    tags: ["AI", "vector", "concept"],
+                    importance: 0.9,
+                    strength: 0.95,
+                    access_count: 4,
+                    vector: [0.9, 0.3, 0.0, 0.0, 0.0, 0.2, 0.4, 0.0],
+                    associations: {"n-1": 0.3, "n-4": 0.5, "n-6": 0.12}
+                },
+                {
+                    id: "n-4",
+                    agent_id: "default",
+                    content: "KD-Tree index partitions vector hyperplanes to optimize KNN recalls to sub-milliseconds.",
+                    system: "long_term",
+                    tags: ["architecture", "KD-Tree", "math"],
+                    importance: 0.95,
+                    strength: 1.0,
+                    access_count: 5,
+                    vector: [0.2, 0.8, 0.0, 0.0, 0.0, 0.0, 0.3, 0.8],
+                    associations: {"n-2": 0.2, "n-3": 0.5}
+                },
+                {
+                    id: "n-5",
+                    agent_id: "default",
+                    content: "Seeded Ego Core belief: I protect sovereign user data above all else.",
+                    system: "long_term",
+                    tags: ["ego", "core_belief"],
+                    importance: 1.0,
+                    strength: 1.0,
+                    access_count: 1,
+                    vector: [0.0, 0.2, 1.0, 0.1, 0.0, 0.0, 0.3, 0.0],
+                    associations: {"n-1": 0.15}
+                },
+                {
+                    id: "n-6",
+                    agent_id: "default",
+                    content: "Seeded Ego Core belief: I prefer process-local sovereign computing systems.",
+                    system: "long_term",
+                    tags: ["ego", "core_belief"],
+                    importance: 1.0,
+                    strength: 1.0,
+                    access_count: 1,
+                    vector: [0.0, 0.4, 0.9, 0.0, 0.0, 0.0, 0.5, 0.0],
+                    associations: {"n-3": 0.12}
+                }
+            ],
+            "agent_hermes": [
+                {
+                    id: "h-1",
+                    agent_id: "agent_hermes",
+                    content: "Hermes script orchestrates self-reflective git watchers and auto-pushes code.",
+                    system: "working",
+                    tags: ["git", "watcher", "automation"],
+                    importance: 0.8,
+                    strength: 1.0,
+                    access_count: 2,
+                    vector: [0.2, 0.7, 0.1, 0.0, 0.1, 0.2, 1.0, 0.1],
+                    associations: {"h-2": 0.35}
+                },
+                {
+                    id: "h-2",
+                    agent_id: "agent_hermes",
+                    content: "Workspace parser builds automatic version bumps in package.json.",
+                    system: "working",
+                    tags: ["git", "version", "automation"],
+                    importance: 0.6,
+                    strength: 0.8,
+                    access_count: 1,
+                    vector: [0.1, 0.5, 0.1, 0.0, 0.2, 0.3, 1.0, 0.1],
+                    associations: {"h-1": 0.35}
+                }
+            ]
+        };
+
+        // Cognitive documents review data
+        const REPORTS = [
+            {
+                id: "r-1",
+                filename: "aura_soul_specification.md",
+                title: "Architectural Specification: Engineering a Soul",
+                date: "2026-05-27 15:45",
+                why: "A stateless LLM context lacks permanent identity and narrative cohesion. AuraSoul is designed to establish an persistent, un-decayable ego coordinate core within process-local memory networks.",
+                what: "Created un-decayable core tags exempt from biological decay compaction loops inside core/auradb.py. Implemented get_affective_state() calculation matrices and spark_synaptic_dream() idle curio triggers in CortexMemory.",
+                how: "Programmed cosine semantic centroid blending equations across 8D continuous concept partitions (Curiosity, Caution, Creativity). Seeded ego coordinates with constant strength (1.0) and tested parity."
+            },
+            {
+                id: "r-2",
+                filename: "walkthrough.md",
+                title: "Walkthrough: Next-Generation upgrades",
+                date: "2026-05-27 12:00",
+                why: "Existing bolton APIs (Mem0, Letta) represent pgvector or PostgreSQL infrastructure bloat. Aura Memory requires zero-dependencies and sub-millisecond local execution to run lightweight edge swarms.",
+                what: "Unified Path A compacting JSONL log with Path B SQLite engine schemas. Created configurator.py interactive use-case questionnaires and fully verified simulated handshakes.",
+                how: "Wrote core/auradb.py embedded tables and core/gateway_upgrade.py MCP tools exposing optional namespace agent_ids. Verified O(log N) KNN partition search precision tests."
+            },
+            {
+                id: "r-3",
+                filename: "task.md",
+                title: "Aura Memory Upgrades checklist",
+                date: "2026-05-27 10:30",
+                why: "Need dynamic progress logging and feature checking to organize parallel storage pipeline development safely without transaction regression.",
+                what: "Updated Phase 12 (AuraDB Layer), Phase 13 (Cortex integration), and Phase 14 (Gateway exposure) states to 100% completed.",
+                how: "Modified task state notation lists in markdown files to track completion percentages and automated tests checks."
+            }
+        ];
+
+        // --- LIFECYCLE INITIALIZATION ---
+        window.addEventListener("DOMContentLoaded", () => {
+            logTerminal("SUCCESS", "🔌 AuraMemory Gateway Stdio transport connection established.");
+            logTerminal("INFO", "🤖 Loading config defaults from core/config.json...");
+            logTerminal("SUCCESS", "✅ Loaded default storage: SQLITE (Path B), db_path: data/aura_locker.db");
+            
+            // Check if onboarding completed before, default show on first simulation
+            openOnboarding();
+            renderAgentsList();
+            renderReportsShelf();
+            calculateAndRenderActiveState();
+        });
+
+        // --- TERMINAL LOGGER UTILITY ---
+        function logTerminal(type, message) {
+            const container = document.getElementById("terminalLog");
+            const timeStr = new Date().toISOString().split('T')[1].slice(0, 8);
+            
+            let color = "text-cyan-400";
+            if (type === "SUCCESS") color = "text-emerald-400";
+            if (type === "ERROR") color = "text-red-400";
+            if (type === "JSON_IN") color = "text-purple-400";
+            if (type === "JSON_OUT") color = "text-amber-400 font-bold";
+
+            const logLine = document.createElement("div");
+            logLine.className = `font-mono text-[10px] ${color} flex space-x-2 leading-relaxed`;
+            logLine.innerHTML = `<span class="text-gray-600">[${timeStr}]</span> <span class="font-bold">[${type}]</span> <span>${escapeHTML(message)}</span>`;
+            
+            container.appendChild(logLine);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        function clearTerminalLogs() {
+            document.getElementById("terminalLog").innerHTML = "";
+            logTerminal("INFO", "Logs cleared.");
+        }
+
+        // --- TABS CONTROLLERS ---
+        function switchRightTab(tab) {
+            activeRightTab = tab;
+            const btnControls = document.getElementById("tabBtnControls");
+            const btnEvolution = document.getElementById("tabBtnEvolution");
+            const contentControls = document.getElementById("tabContentControls");
+            const contentEvolution = document.getElementById("tabContentEvolution");
+
+            if (tab === 'controls') {
+                btnControls.className = "flex-1 py-3 text-center border-b-2 border-cyan-500 text-cyan-400 bg-gray-900/10 transition-all duration-300";
+                btnEvolution.className = "flex-1 py-3 text-center border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition-all duration-300";
+                contentControls.classList.remove("hidden");
+                contentEvolution.classList.add("hidden");
+            } else {
+                btnControls.className = "flex-1 py-3 text-center border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition-all duration-300";
+                btnEvolution.className = "flex-1 py-3 text-center border-b-2 border-cyan-500 text-cyan-400 bg-gray-900/10 transition-all duration-300";
+                contentControls.classList.add("hidden");
+                contentEvolution.classList.remove("hidden");
+            }
+            logTerminal("INFO", `Swapped side panel view to: ${tab.toUpperCase()}`);
+        }
+
+        // --- AGENT LIBRARY (WORKSPACE MANAGEMENT) ---
+        function renderAgentsList() {
+            const container = document.getElementById("agentsContainer");
+            container.innerHTML = "";
+
+            agents.forEach(agent => {
+                const isActive = agent.id === activeAgentId;
+                const card = document.createElement("button");
+                card.onclick = () => switchWorkspace(agent.id);
+                card.className = `w-full text-left p-4 rounded-2xl glass-panel transition-all duration-300 border flex flex-col space-y-2 relative overflow-hidden ${
+                    isActive 
+                        ? 'border-cyan-500/50 bg-cyan-500/5 shadow-md shadow-cyan-500/5' 
+                        : 'border-gray-800 bg-gray-950/20 hover:border-gray-700'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-outfit font-bold text-xs ${isActive ? 'text-cyan-400' : 'text-gray-300'}">${agent.name}</span>
+                        <span class="text-[9px] font-mono font-semibold px-2 py-0.5 rounded ${agent.storageMode === 'sqlite' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'}">${agent.storageMode.toUpperCase()}</span>
+                    </div>
+                    <div class="flex justify-between text-[9px] font-mono text-gray-500">
+                        <span>namespace: ${agent.namespace}</span>
+                        <span>decay: ${agent.decayRate}x</span>
+                    </div>
+                `;
+                
+                if (isActive) {
+                    const glowEffect = document.createElement("div");
+                    glowEffect.className = "absolute right-0 top-0 bottom-0 w-1 bg-cyan-500";
+                    card.appendChild(glowEffect);
+                }
+
+                container.appendChild(card);
+            });
+        }
+
+        function switchWorkspace(id) {
+            if (id === activeAgentId) return;
+            activeAgentId = id;
+            
+            const agent = agents.find(a => a.id === id);
+            logTerminal("INFO", `Swapping agent workspace context to: ${agent.name} (Namespace: ${agent.namespace})`);
+            
+            // Log simulated JSON-RPC method swapper
+            const jsonReq = {
+                jsonrpc: "2.0",
+                id: Math.floor(Math.random()*100),
+                method: "initialize",
+                params: {
+                    agent_id: agent.namespace
+                }
+            };
+            logTerminal("JSON_IN", JSON.stringify(jsonReq));
+            
+            setTimeout(() => {
+                logTerminal("JSON_OUT", `Namespace '${agent.namespace}' loaded successfully. Path: ${agent.dbPath}`);
+                
+                // Update UI headers
+                document.getElementById("activeAgentHeader").innerText = agent.name;
+                document.getElementById("activeAgentNS").innerText = `namespace: ${agent.namespace}`;
+                
+                document.getElementById("sysEngine").innerText = `${agent.storageMode.toUpperCase()} (PATH ${agent.storageMode === 'sqlite' ? 'B' : 'A'})`;
+                document.getElementById("sysDBSize").innerText = agent.storageMode === 'sqlite' ? '32.4 KB' : '12.8 KB';
+                document.getElementById("sysDecayRate").innerText = `${agent.decayRate}x sweep`;
+                
+                renderAgentsList();
+                calculateAndRenderActiveState();
+            }, 300);
+        }
+
+        function openCreateAgentModal() {
+            document.getElementById("createAgentModal").classList.remove("hidden");
+        }
+
+        function closeCreateAgentModal() {
+            document.getElementById("createAgentModal").classList.add("hidden");
+        }
+
+        function commitCreateAgent() {
+            const name = document.getElementById("newAgentName").value.trim();
+            const ns = document.getElementById("newAgentNS").value.trim();
+            const vocab = document.getElementById("newAgentVocab").value;
+
+            if (!name || !ns) {
+                alert("Please enter both agent name and namespace!");
+                return;
+            }
+
+            const newAgent = {
+                id: ns,
+                name: name,
+                namespace: ns,
+                storageMode: 'jsonl', // Default Path A for edge creations
+                dbPath: `data/${ns}_locker.auradb`,
+                decayRate: 1.0,
+                vocabulary: vocab
+            };
+
+            // Seed empty database array
+            database[ns] = [
+                {
+                    id: `${ns}-seed-node`,
+                    agent_id: ns,
+                    content: `Seeded standard workspace memory parameters for ${name}.`,
+                    system: "working",
+                    tags: ["AI", "bootstrap"],
+                    importance: 0.6,
+                    strength: 1.0,
+                    access_count: 1,
+                    vector: MOCK_VOCABS[vocab],
+                    associations: {}
+                }
+            ];
+
+            agents.push(newAgent);
+            closeCreateAgentModal();
+            renderAgentsList();
+            switchWorkspace(ns);
+            
+            logTerminal("SUCCESS", `Agent workspace '${name}' successfully configured and mounted.`);
+            
+            // Clean inputs
+            document.getElementById("newAgentName").value = "";
+            document.getElementById("newAgentNS").value = "";
+        }
+
+        // --- MEMORY INGESTIONS ---
+        function commitManualMemory() {
+            const content = document.getElementById("manualMemoryInput").value.trim();
+            const tagsStr = document.getElementById("manualTagsInput").value.trim();
+            const importanceVal = parseFloat(document.getElementById("manualImportanceInput").value) || 0.6;
+
+            if (!content) {
+                alert("Please enter memory content!");
+                return;
+            }
+
+            const tags = tagsStr ? tagsStr.split(",").map(t => t.trim()) : ["custom"];
+            
+            // Log RPC
+            const jsonReq = {
+                jsonrpc: "2.0",
+                id: 11,
+                method: "tools/call",
+                params: {
+                    name: "auramem_commit",
+                    arguments: {
+                        content: content,
+                        tags: tags,
+                        importance: importanceVal,
+                        agent_id: activeAgentId
+                    }
+                }
+            };
+            logTerminal("JSON_IN", JSON.stringify(jsonReq));
+
+            // Append to database simulator
+            setTimeout(() => {
+                const uuid = "n-" + Math.floor(Math.random()*10000);
+                const agent = agents.find(a => a.id === activeAgentId);
+                const baseVec = MOCK_VOCABS[agent.vocabulary];
+                
+                // Slightly randomize vector for graphing
+                const customVec = baseVec.map(v => Math.max(0.0, Math.min(1.0, v + (Math.random() - 0.5) * 0.2)));
+
+                const node = {
+                    id: uuid,
+                    agent_id: activeAgentId,
+                    content: content,
+                    system: "working",
+                    tags: tags,
+                    importance: importanceVal,
+                    strength: 1.0,
+                    access_count: 1,
+                    vector: customVec,
+                    associations: {}
+                };
+
+                // Form associations with similar vectors
+                const nodes = database[activeAgentId];
+                nodes.forEach(n => {
+                    // Cosine simulator
+                    const dot = customVec.reduce((sum, v, i) => sum + v * n.vector[i], 0);
+                    const magA = Math.sqrt(customVec.reduce((sum, v) => sum + v*v, 0));
+                    const magB = Math.sqrt(n.vector.reduce((sum, v) => sum + v*v, 0));
+                    const sim = dot / (magA * magB);
+
+                    if (sim >= 0.2) {
+                        const strength = 0.2 + (0.7 * (sim - 0.2));
+                        node.associations[n.id] = parseFloat(strength.toFixed(3));
+                        n.associations[uuid] = parseFloat(strength.toFixed(3));
+                    }
+                });
+
+                nodes.push(node);
+                logTerminal("JSON_OUT", `✅ Memory successfully committed to namespace '${activeAgentId}'. Node ID: ${uuid}`);
+                
+                // Clear fields
+                document.getElementById("manualMemoryInput").value = "";
+                document.getElementById("manualTagsInput").value = "";
+                
+                calculateAndRenderActiveState();
+            }, 300);
+        }
+
+        function commitEgoBelief() {
+            const val = document.getElementById("egoBeliefInput").value.trim();
+            if (!val) {
+                alert("Please enter belief content!");
+                return;
+            }
+
+            // Log RPC
+            const jsonReq = {
+                jsonrpc: "2.0",
+                id: 15,
+                method: "tools/call",
+                params: {
+                    name: "aurasoul_seed_ego",
+                    arguments: {
+                        beliefs: [val],
+                        agent_id: activeAgentId
+                    }
+                }
+            };
+            logTerminal("JSON_IN", JSON.stringify(jsonReq));
+
+            setTimeout(() => {
+                const uuid = "n-" + Math.floor(Math.random()*10000);
+                const node = {
+                    id: uuid,
+                    agent_id: activeAgentId,
+                    content: val,
+                    system: "long_term", // Direct promotion
+                    tags: ["ego", "core_belief"],
+                    importance: 1.0, // Exempt
+                    strength: 1.0,
+                    access_count: 1,
+                    vector: [0.0, 0.3, 0.95, 0.05, 0.0, 0.0, 0.4, 0.0],
+                    associations: {}
+                };
+
+                database[activeAgentId].push(node);
+                logTerminal("JSON_OUT", `✅ Core Ego belief seeded. Locked strength at 1.0. Exempt from biological decay.`);
+                
+                document.getElementById("egoBeliefInput").value = "";
+                calculateAndRenderActiveState();
+            }, 300);
+        }
+
+        // --- CONSOLIDATION SWEEP (DECAY COMPACTION) ---
+        function triggerCompactionSweep() {
+            logTerminal("INFO", "Sweeping active working memories scoped by agent...");
+            
+            const jsonReq = {
+                jsonrpc: "2.0",
+                id: 30,
+                method: "tools/call",
+                params: {
+                    name: "auramem_consolidate",
+                    arguments: {
+                        decay_rate: 1.0,
+                        agent_id: activeAgentId
+                    }
+                }
+            };
+            logTerminal("JSON_IN", JSON.stringify(jsonReq));
+
+            setTimeout(() => {
+                const nodes = database[activeAgentId];
+                let promotedCount = 0;
+                let promotedList = [];
+                let deadCount = 0;
+
+                for (let i = nodes.length - 1; i >= 0; i--) {
+                    let n = nodes[i];
+                    
+                    // Ego nodes are completely exempt!
+                    if (n.importance === 1.0 || n.tags.includes("ego")) {
+                        continue;
+                    }
+
+                    if (n.system === "working") {
+                        const score = (n.importance * 0.5) + (Math.min(n.access_count / 5.0, 1.0) * 0.5);
+                        if (score >= 0.6) {
+                            n.system = "long_term";
+                            n.strength = 1.0;
+                            promotedCount++;
+                            promotedList.push(n.content.slice(0, 30) + "...");
+                        } else {
+                            n.strength = parseFloat((n.strength - 0.15).toFixed(2));
+                            if (n.strength <= 0) {
+                                // Dead purge
+                                const deadId = n.id;
+                                nodes.splice(i, 1);
+                                deadCount++;
+                                
+                                // Clean up associations links
+                                nodes.forEach(otherNode => {
+                                    if (otherNode.associations[deadId]) {
+                                        delete otherNode.associations[deadId];
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+
+                logTerminal("JSON_OUT", `⚙️ Consolidation executed. Promoted to System 2 LTM: ${promotedCount} nodes. Purged dead nodes: ${deadCount}.\nPromoted items: ${promotedList.join(", ") || 'None'}`);
+                calculateAndRenderActiveState();
+            }, 400);
+        }
+
+        // --- AURAWIKI EXPORT COMPILER ---
+        function triggerAuraWikiExport() {
+            logTerminal("INFO", `AuraWiki Obsidian vault compiler initiated. Target: data/${activeAgentId}_obsidian_vault/`);
+            
+            setTimeout(() => {
+                logTerminal("SUCCESS", `📝 Compiled Long-Term memories into plain text Markdown vaults successfully!`);
+                logTerminal("SUCCESS", `🔗 Computed cosine connections thresholds (sim >= 0.20) and resolved static [[wiki-links]] bidirectionally.`);
+                alert("AuraWiki Obsidian vault compiled cleanly! Open visuals/obsidian_vault inside Obsidian to inspect symbolic vector linkages.");
+            }, 500);
+        }
+
+        // --- SIMULATION SLIDER (MOOD SWING ACTIONS) ---
+        function handleSliderChange(val) {
+            const numericVal = parseInt(val);
+            const curiosityVal = document.getElementById("valCuriosity");
+            const cautionVal = document.getElementById("valCaution");
+            const sociabilityVal = document.getElementById("valSociability");
+            const sovereigntyVal = document.getElementById("valSovereignty");
+            const creativityVal = document.getElementById("valCreativity");
+            
+            const barCuriosity = document.getElementById("barCuriosity");
+            const barCaution = document.getElementById("barCaution");
+            const barSociability = document.getElementById("barSociability");
+            const barSovereignty = document.getElementById("barSovereignty");
+            const barCreativity = document.getElementById("barCreativity");
+
+            let cur, cau, soc, sov, cre;
+
+            if (numericVal < 35) {
+                // High Caution / Hacking simulation
+                cur = 0.35 + (numericVal / 100);
+                cau = 0.85 - (numericVal / 100);
+                soc = 0.20;
+                sov = 0.90;
+                cre = 0.30;
+                logTerminal("INFO", "Simulating 'System Error/Hacking Mode' active trigger. Caution and Sovereignty indices surge.");
+            } else if (numericVal > 65) {
+                // High Creativity & curiosity Research mode
+                cur = 0.92;
+                cau = 0.15;
+                soc = 0.60;
+                sov = 0.40;
+                cre = 0.88;
+                logTerminal("INFO", "Simulating 'Creative Concept Research Mode' trigger active. Curiosity and Creativity indexes maximize.");
+            } else {
+                // Balance defaults
+                cur = 0.85;
+                cau = 0.25;
+                soc = 0.40;
+                sov = 0.70;
+                cre = 0.62;
+            }
+
+            curiosityVal.innerText = cur.toFixed(2);
+            cautionVal.innerText = cau.toFixed(2);
+            sociabilityVal.innerText = soc.toFixed(2);
+            sovereigntyVal.innerText = sov.toFixed(2);
+            creativityVal.innerText = cre.toFixed(2);
+
+            barCuriosity.style.width = (cur * 100) + "%";
+            barCaution.style.width = (cau * 100) + "%";
+            barSociability.style.width = (soc * 100) + "%";
+            barSovereignty.style.width = (sov * 100) + "%";
+            barCreativity.style.width = (cre * 100) + "%";
+        }
+
+        // --- CALCULATE AFFECTIVE STATE MATH & D3 SYNAPSE WEBS ---
+        function calculateAndRenderActiveState() {
+            const nodes = database[activeAgentId];
+            
+            // 1. Calculate active System 1 vs 2 counts
+            const wmCount = nodes.filter(n => n.system === "working").length;
+            const ltmCount = nodes.filter(n => n.system === "long_term").length;
+            
+            document.getElementById("activeWMCount").innerText = wmCount;
+            document.getElementById("activeLTMCount").innerText = ltmCount;
+
+            // 2. Compute dynamic affective coordinates
+            if (nodes.length > 0) {
+                let avg_vec = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+                let totalStrength = 0;
+
+                nodes.forEach(n => {
+                    const weight = n.strength || 1.0;
+                    for (let i = 0; i < 8; i++) {
+                        avg_vec[i] += n.vector[i] * weight;
+                    }
+                    totalStrength += weight;
+                });
+
+                if (totalStrength > 0) {
+                    for (let i = 0; i < 8; i++) {
+                        avg_vec[i] /= totalStrength;
+                    }
+                }
+
+                // Coordinates calculation
+                let cur = (avg_vec[0] + avg_vec[6]) / 2.0;
+                let cau = (avg_vec[2] + avg_vec[3]) / 2.0;
+                let soc = (avg_vec[4] + avg_vec[5]) / 2.0;
+                let sov = (avg_vec[2] + avg_vec[1]) / 2.0;
+                let cre = (avg_vec[7] + avg_vec[0]) / 2.0;
+
+                // Scale for visuals
+                const scale = (val) => Math.max(0.1, Math.min(1.0, val * 2.5));
+
+                document.getElementById("valCuriosity").innerText = scale(cur).toFixed(2);
+                document.getElementById("valCaution").innerText = scale(cau).toFixed(2);
+                document.getElementById("valSociability").innerText = scale(soc).toFixed(2);
+                document.getElementById("valSovereignty").innerText = scale(sov).toFixed(2);
+                document.getElementById("valCreativity").innerText = scale(cre).toFixed(2);
+
+                document.getElementById("barCuriosity").style.width = (scale(cur) * 100) + "%";
+                document.getElementById("barCaution").style.width = (scale(cau) * 100) + "%";
+                document.getElementById("barSociability").style.width = (scale(soc) * 100) + "%";
+                document.getElementById("barSovereignty").style.width = (scale(sov) * 100) + "%";
+                document.getElementById("barCreativity").style.width = (scale(cre) * 100) + "%";
+            }
+
+            // 3. Render D3 Force-Directed Canvas Web
+            renderD3ForceGraph(nodes);
+            
+            // 4. Update Synaptic Gap Spark
+            evaluateSynapticSparks(nodes);
+        }
+
+        // --- D3 FORCE DIRECTED GRAPH PHYSIC CONTROLLER ---
+        let d3Simulation = null;
+        function renderD3ForceGraph(nodesData) {
+            const svg = d3.select("#forceGraph");
+            svg.selectAll("*").remove(); // Clear
+
+            const container = document.getElementById("canvasContainer");
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            // Deep clone to prevent mutating static DB references
+            const nodes = nodesData.map(d => Object.assign({}, d));
+            
+            // Resolve links mapping associations
+            const links = [];
+            nodes.forEach(source => {
+                for (let targetId in source.associations) {
+                    // Check target exists
+                    const targetNode = nodes.find(n => n.id === targetId);
+                    if (targetNode) {
+                        links.push({
+                            source: source.id,
+                            target: targetId,
+                            value: source.associations[targetId]
+                        });
+                    }
+                }
+            });
+
+            // Start physics simulation
+            d3Simulation = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(links).id(d => d.id).distance(120))
+                .force("charge", d3.forceManyBody().strength(-200))
+                .force("center", d3.forceCenter(width / 2, height / 2))
+                .force("collision", d3.forceCollide().radius(40));
+
+            // Render linkages lines
+            const link = svg.append("g")
+                .attr("class", "links")
+                .selectAll("line")
+                .data(links)
+                .enter().append("line")
+                .attr("stroke", "rgba(6, 182, 212, 0.15)")
+                .attr("stroke-width", d => d.value * 3);
+
+            // Render Nodes Containers
+            const node = svg.append("g")
+                .attr("class", "nodes")
+                .selectAll("g")
+                .data(nodes)
+                .enter().append("g")
+                .attr("class", "cursor-pointer")
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended))
+                .on("click", (event, d) => showNodeDetail(d));
+
+            // Render glowing circle shapes
+            node.append("circle")
+                .attr("r", d => d.system === "long_term" ? 22 : 18)
+                .attr("fill", d => d.system === "long_term" ? "rgba(139, 92, 246, 0.25)" : "rgba(6, 182, 212, 0.15)")
+                .attr("stroke", d => d.system === "long_term" ? "#8b5cf6" : "#06b6d4")
+                .attr("stroke-width", d => d.importance === 1.0 ? 3 : 1.5)
+                .attr("opacity", d => Math.max(0.2, d.strength)) // Biological decay opacity
+                .attr("class", d => d.system === "long_term" ? "ltm-node-glow" : "");
+
+            // Monospace short labels inside circles
+            node.append("text")
+                .attr("text-anchor", "middle")
+                .attr("dy", ".3em")
+                .attr("fill", "#ffffff")
+                .attr("font-size", "8px")
+                .attr("font-family", "Fira Code, monospace")
+                .text(d => d.tags[0] ? d.tags[0].toUpperCase() : d.id.slice(0, 4));
+
+            // Node tooltips content label
+            node.append("title")
+                .text(d => `[${d.system.toUpperCase()}] ${d.content}`);
+
+            // Frame updates ticks
+            d3Simulation.on("tick", () => {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                node
+                    .attr("transform", d => `translate(${d.x},${d.y})`);
+            });
+
+            // Physics drag handlers
+            function dragstarted(event, d) {
+                if (!event.active) d3Simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+
+            function dragended(event, d) {
+                if (!event.active) d3Simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+        }
+
+        // --- FLOATING DETAIL CARD HANDLERS ---
+        function showNodeDetail(d) {
+            const card = document.getElementById("nodeDetailCard");
+            card.classList.remove("hidden");
+            
+            document.getElementById("nodeContentText").innerText = d.content;
+            document.getElementById("nodeIDText").innerText = d.id;
+            document.getElementById("nodeAccessText").innerText = `${d.access_count} active recalls`;
+            document.getElementById("nodeTagsText").innerText = d.tags.join(", ");
+            document.getElementById("nodeImportanceText").innerText = d.importance.toFixed(2);
+            
+            const sysTag = document.getElementById("nodeSysTag");
+            const egoTag = document.getElementById("nodeEgoTag");
+
+            if (d.system === 'long_term') {
+                sysTag.className = "text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/30 text-purple-400";
+                sysTag.innerText = "LTM:1.0";
+            } else {
+                sysTag.className = "text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-400";
+                sysTag.innerText = `WM:${d.strength.toFixed(2)}`;
+            }
+
+            if (d.importance === 1.0 || d.tags.includes("ego")) {
+                egoTag.classList.remove("hidden");
+            } else {
+                egoTag.classList.add("hidden");
+            }
+
+            logTerminal("INFO", `Inspecting concept memory node: ${d.id}`);
+        }
+
+        function closeNodeDetail() {
+            document.getElementById("nodeDetailCard").classList.add("hidden");
+        }
+
+        // --- EVALUATE SYNAPTIC SPARKS (IDLE DREAMS CRUNCHER) ---
+        function evaluateSynapticSparks(nodes) {
+            const alertBox = document.getElementById("dreamSparkAlert");
+            if (nodes.length < 3) {
+                alertBox.classList.add("hidden");
+                return;
+            }
+
+            // Look for intermediate similarities
+            let bestA = null;
+            let bestB = null;
+            let maxSim = 0.0;
+
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const a = nodes[i];
+                    const b = nodes[j];
+                    
+                    if (a.associations[b.id]) continue; // Already linked
+                    
+                    const dot = a.vector.reduce((sum, v, idx) => sum + v * b.vector[idx], 0);
+                    const magA = Math.sqrt(a.vector.reduce((sum, v) => sum + v*v, 0));
+                    const magB = Math.sqrt(b.vector.reduce((sum, v) => sum + v*v, 0));
+                    const sim = dot / (magA * magB);
+
+                    if (sim >= 0.05 && sim < 0.20) {
+                        if (sim > maxSim) {
+                            maxSim = sim;
+                            bestA = a;
+                            bestB = b;
+                        }
+                    }
+                }
+            }
+
+            if (bestA && bestB) {
+                alertBox.classList.remove("hidden");
+                document.getElementById("dreamPromptText").innerHTML = `How does <strong>'${bestA.content.slice(0, 30)}...'</strong> relate to <strong>'${bestB.content.slice(0, 30)}...'</strong>? Let's dream a cognitive bridge link.`;
+                document.getElementById("dreamSimText").innerText = `Similarity: ${maxSim.toFixed(3)}`;
+                
+                // Save ids on element attributes
+                alertBox.setAttribute("data-node-a", bestA.id);
+                alertBox.setAttribute("data-node-b", bestB.id);
+                alertBox.setAttribute("data-sim", maxSim.toFixed(3));
+            } else {
+                alertBox.classList.add("hidden");
+            }
+        }
+
+        function dismissDreamAlert() {
+            document.getElementById("dreamSparkAlert").classList.add("hidden");
+            logTerminal("INFO", "Synaptic dream spark alert dismissed.");
+        }
+
+        function synthesizeBridge() {
+            const alertBox = document.getElementById("dreamSparkAlert");
+            const aId = alertBox.getAttribute("data-node-a");
+            const bId = alertBox.getAttribute("data-node-b");
+            const sim = parseFloat(alertBox.getAttribute("data-sim"));
+
+            const nodeA = database[activeAgentId].find(n => n.id === aId);
+            const nodeB = database[activeAgentId].find(n => n.id === bId);
+
+            logTerminal("INFO", `Synthesizing cognitive synapse bridge link...`);
+            
+            const jsonReq = {
+                jsonrpc: "2.0",
+                id: 45,
+                method: "tools/call",
+                params: {
+                    name: "aurasoul_get_sparks",
+                    arguments: {
+                        agent_id: activeAgentId
+                    }
+                }
+            };
+            logTerminal("JSON_IN", JSON.stringify(jsonReq));
+
+            setTimeout(() => {
+                // Ingest new bridge node
+                const uuid = "n-" + Math.floor(Math.random()*10000);
+                const bridgeNode = {
+                    id: uuid,
+                    agent_id: activeAgentId,
+                    content: `Insight Bridge: Integrates concepts of '${nodeA.tags[0]}' with '${nodeB.tags[0]}'.`,
+                    system: "long_term",
+                    tags: ["synapse", "insight"],
+                    importance: 0.85,
+                    strength: 1.0,
+                    access_count: 1,
+                    // Blended vector coordinates
+                    vector: nodeA.vector.map((v, idx) => (v + nodeB.vector[idx]) / 2.0),
+                    associations: {}
+                };
+
+                // Link to parents
+                bridgeNode.associations[nodeA.id] = 0.55;
+                bridgeNode.associations[nodeB.id] = 0.55;
+                
+                nodeA.associations[uuid] = 0.55;
+                nodeB.associations[uuid] = 0.55;
+                
+                // Link directly
+                nodeA.associations[nodeB.id] = 0.25;
+                nodeB.associations[nodeA.id] = 0.25;
+
+                database[activeAgentId].push(bridgeNode);
+                logTerminal("JSON_OUT", `✅ Insight Node '${uuid}' synthesized cleanly, double-linking concept networks.`);
+                
+                alertBox.classList.add("hidden");
+                calculateAndRenderActiveState();
+            }, 450);
+        }
+
+        // --- PANEL 5: COGNITIVE EVOLUTION REPORT VIEWER ---
+        function renderReportsShelf() {
+            const container = document.getElementById("reportViewerShelf");
+            container.innerHTML = "";
+
+            REPORTS.forEach(rep => {
+                const card = document.createElement("div");
+                card.className = "p-5 rounded-2xl glass-panel border border-gray-800 space-y-4";
+                card.innerHTML = `
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-2.5">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-file-code text-purple-400 text-sm"></i>
+                            <span class="text-xs font-mono font-semibold text-gray-300">${rep.filename}</span>
+                        </div>
+                        <span class="text-[9px] font-mono text-gray-500">${rep.date}</span>
+                    </div>
+                    <h4 class="font-outfit font-bold text-sm text-cyan-400">${rep.title}</h4>
+                    
+                    <div class="space-y-3 text-xs leading-relaxed">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-wider">Why:</span>
+                            <p class="text-gray-400">${rep.why}</p>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-wider">What:</span>
+                            <p class="text-gray-400">${rep.what}</p>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-wider">How:</span>
+                            <p class="text-gray-400">${rep.how}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- ONBOARDING STEPPER MODAL CONTROLLER ---
+        function openOnboarding() {
+            currentStep = 1;
+            document.getElementById("onboardingOverlay").classList.remove("hidden");
+            renderStepCard();
+        }
+
+        function closeOnboarding() {
+            document.getElementById("onboardingOverlay").classList.add("hidden");
+            logTerminal("SUCCESS", "Onboarding setup completed. Main command dashboard activated.");
+        }
+
+        function selectProfileOption(category, value) {
+            if (category === 'env') {
+                selectedEnv = value;
+                const btnEdge = document.getElementById("optEnvEdge");
+                const btnDesktop = document.getElementById("optEnvDesktop");
+                if (value === 'edge') {
+                    btnEdge.className = "p-4 rounded-xl text-left border border-cyan-500/20 bg-cyan-500/5 hover:border-cyan-500/40 transition-all";
+                    btnDesktop.className = "p-4 rounded-xl text-left border border-gray-800 bg-gray-900/20 hover:border-gray-700 transition-all";
+                } else {
+                    btnEdge.className = "p-4 rounded-xl text-left border border-gray-800 bg-gray-900/20 hover:border-gray-700 transition-all";
+                    btnDesktop.className = "p-4 rounded-xl text-left border border-cyan-500/20 bg-cyan-500/5 hover:border-cyan-500/40 transition-all";
+                }
+            } else {
+                selectedConcurrency = value;
+                const btnSingle = document.getElementById("optConSingle");
+                const btnMulti = document.getElementById("optConMulti");
+                if (value === 'single') {
+                    btnSingle.className = "p-4 rounded-xl text-left border border-cyan-500/20 bg-cyan-500/5 hover:border-cyan-500/40 transition-all";
+                    btnMulti.className = "p-4 rounded-xl text-left border border-gray-800 bg-gray-900/20 hover:border-gray-700 transition-all";
+                } else {
+                    btnSingle.className = "p-4 rounded-xl text-left border border-gray-800 bg-gray-900/20 hover:border-gray-700 transition-all";
+                    btnMulti.className = "p-4 rounded-xl text-left border border-cyan-500/20 bg-cyan-500/5 hover:border-cyan-500/40 transition-all";
+                }
+            }
+            logTerminal("INFO", `Profiler selections: Env=[${selectedEnv.toUpperCase()}], Concurrency=[${selectedConcurrency.toUpperCase()}]`);
+        }
+
+        function stepperBack() {
+            if (currentStep > 1) {
+                currentStep--;
+                renderStepCard();
+            }
+        }
+
+        function stepperNext() {
+            if (currentStep < 4) {
+                currentStep++;
+                renderStepCard();
+                
+                if (currentStep === 4) {
+                    runInteractiveVerificationTests();
+                }
+            } else {
+                // Apply step selections to actual databases simulation
+                const agent = agents.find(a => a.id === 'default');
+                const env = selectedEnv;
+                const conc = selectedConcurrency;
+
+                if (env === 'edge' && conc === 'single') {
+                    agent.storageMode = 'jsonl';
+                    agent.dbPath = 'data/aura_locker.auradb';
+                } else {
+                    agent.storageMode = 'sqlite';
+                    agent.dbPath = 'data/aura_locker.db';
+                }
+
+                // Append Step 3 Ego beliefs to active nodes
+                const b1 = document.getElementById("stepEgo1").value.trim();
+                const b2 = document.getElementById("stepEgo2").value.trim();
+                const b3 = document.getElementById("stepEgo3").value.trim();
+
+                const nodes = database['default'];
+                if (b1) {
+                    nodes.push({ id: "ego-wizard-1", agent_id: "default", content: b1, system: "long_term", tags: ["ego", "core_belief"], importance: 1.0, strength: 1.0, access_count: 1, vector: [0.0, 0.2, 1.0, 0.1, 0.0, 0.0, 0.3, 0.0], associations: {} });
+                }
+                if (b2) {
+                    nodes.push({ id: "ego-wizard-2", agent_id: "default", content: b2, system: "long_term", tags: ["ego", "core_belief"], importance: 1.0, strength: 1.0, access_count: 1, vector: [0.0, 0.4, 0.9, 0.0, 0.0, 0.0, 0.5, 0.0], associations: {} });
+                }
+                if (b3) {
+                    nodes.push({ id: "ego-wizard-3", agent_id: "default", content: b3, system: "long_term", tags: ["ego", "core_belief"], importance: 1.0, strength: 1.0, access_count: 1, vector: [0.1, 0.3, 0.8, 0.0, 0.0, 0.0, 0.4, 0.0], associations: {} });
+                }
+
+                closeOnboarding();
+                switchWorkspace('default'); // reload
+            }
+        }
+
+        function renderStepCard() {
+            // Hide all step cards
+            document.getElementById("stepCard1").classList.add("hidden");
+            document.getElementById("stepCard2").classList.add("hidden");
+            document.getElementById("stepCard3").classList.add("hidden");
+            document.getElementById("stepCard4").classList.add("hidden");
+            
+            // Show target card
+            document.getElementById(`stepCard${currentStep}`).classList.remove("hidden");
+            
+            // Update counter
+            document.getElementById("stepperStepCounter").innerText = `Step ${currentStep} of 4`;
+
+            const backBtn = document.getElementById("stepperBackBtn");
+            const nextBtn = document.getElementById("stepperNextBtn");
+
+            // Back button visible rules
+            if (currentStep > 1) {
+                backBtn.classList.remove("invisible");
+            } else {
+                backBtn.classList.add("invisible");
+            }
+
+            // Button label rules
+            if (currentStep === 1) {
+                nextBtn.innerText = "Next: Recommendation";
+            } else if (currentStep === 2) {
+                // Dynamically evaluate recommendation based on profile choices
+                const recTitle = document.getElementById("recTitle");
+                const recReason = document.getElementById("recReason");
+                const recJSON = document.getElementById("recJSON");
+
+                if (selectedEnv === 'edge' && selectedConcurrency === 'single') {
+                    recTitle.innerText = "Path A (JSONL - Compacting Log) Recommended!";
+                    recReason.innerText = "Your sandboxed/edge environment with single-agent concurrency matches Path A perfectly. This features strict zero-dependencies, works natively inside WASM frameworks, and writes plaintext JSON-line snapshots perfect for offline Git versioned vaults.";
+                    recJSON.innerText = "{\n  \"default_storage_mode\": \"jsonl\",\n  \"default_db_path\": \"data/aura_locker.auradb\"\n}";
+                } else {
+                    recTitle.innerText = "Path B (SQLite-Unified Relational Engine) Recommended!";
+                    recReason.innerText = "Your desktop/server daemon setup or concurrent multi-agent swarm workload demands Path B. This setup uses SQLite WAL (Write-Ahead Logging) to ensure transaction safety, thread locking stability, and high-concurrency ACID writes.";
+                    recJSON.innerText = "{\n  \"default_storage_mode\": \"sqlite\",\n  \"default_db_path\": \"data/aura_locker.db\"\n}";
+                }
+                nextBtn.innerText = "Next: Seed Core Ego";
+            } else if (currentStep === 3) {
+                nextBtn.innerText = "Next: Verify System";
+            } else if (currentStep === 4) {
+                nextBtn.innerText = "Finish Onboarding";
+            }
+        }
+
+        // --- SIMULATED WIZARD VERIFICATIONS ---
+        function runInteractiveVerificationTests() {
+            const box = document.getElementById("verificationLogBox");
+            box.innerHTML = ""; // clear
+            
+            const nextBtn = document.getElementById("stepperNextBtn");
+            nextBtn.classList.add("bg-gray-800", "cursor-not-allowed");
+            nextBtn.disabled = true;
+
+            const stages = [
+                { text: "Simulating MCP Client Handshake (initialize)...", icon: "fa-solid fa-handshake" },
+                { text: "Auditing JSON-RPC Tool schemas (tools/list)...", icon: "fa-solid fa-list-check" },
+                { text: "Verifying multi-agent workspace namespace isolation...", icon: "fa-solid fa-users" },
+                { text: "Executing biological decay compaction algorithm...", icon: "fa-solid fa-bolt-lightning" },
+                { text: "Computing 8D mathematical vector parity tests...", icon: "fa-solid fa-square-root-variable" }
+            ];
+
+            let activeStage = 0;
+
+            function runNextVerificationStage() {
+                if (activeStage < stages.length) {
+                    const stg = stages[activeStage];
+                    const line = document.createElement("div");
+                    line.className = "flex items-center justify-between p-3.5 rounded-xl bg-gray-900/60 border border-gray-800 text-xs font-outfit";
+                    line.innerHTML = `
+                        <div class="flex items-center space-x-2.5">
+                            <i class="${stg.icon} text-cyan-500 animate-pulse"></i>
+                            <span class="text-gray-300">${stg.text}</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-[10px] font-mono text-cyan-500 font-bold">
+                            <span class="animate-bounce font-extrabold">Sweeping...</span>
+                        </div>
+                    `;
+                    box.appendChild(line);
+
+                    setTimeout(() => {
+                        line.className = "flex items-center justify-between p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/25 text-xs font-outfit";
+                        line.innerHTML = `
+                            <div class="flex items-center space-x-2.5">
+                                <i class="${stg.icon} text-emerald-400"></i>
+                                <span class="text-emerald-300">${stg.text}</span>
+                            </div>
+                            <div class="flex items-center space-x-2 text-[10px] font-mono text-emerald-400 font-bold">
+                                <span>VERIFIED</span>
+                            </div>
+                        `;
+                        logTerminal("SUCCESS", `Handshake check passed: ${stg.text.slice(0, 45)}...`);
+                        activeStage++;
+                        runNextVerificationStage();
+                    }, 800);
+                } else {
+                    // Complete
+                    nextBtn.classList.remove("bg-gray-800", "cursor-not-allowed");
+                    nextBtn.classList.add("bg-cyan-500");
+                    nextBtn.disabled = false;
+                }
+            }
+
+            runNextVerificationStage();
+        }
+    </script>
+</body>
+</html>

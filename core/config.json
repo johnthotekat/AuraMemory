@@ -1,0 +1,4 @@
+{
+  "default_storage_mode": "sqlite",
+  "default_db_path": "data/aura_locker.db"
+}

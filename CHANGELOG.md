@@ -3,6 +3,22 @@
 All notable changes to the AuraMemory cognitive memory module will be documented in this file.
 
 ---
+## [1.1.6] - 2026-05-28: Release v1.1.6
+
+### 🚀 Achievements & Added Features
+* **Feature**: Upgraded visualizer to sovereign multi-agent commander console with 4-stage onboarding stepper
+* **Feature**: sharded SQLite relational storage layer
+* **Feature**: and Bottom accordion evolution drawers
+
+### 💥 Breaks & Bug Fixes
+* **Fixed**: Resolved SQLite relational database format write collisions and import circular dependencies
+
+### ⚙️ Refactors & Updates
+* **Update**: Exposed dynamic imports
+* **Update**: resolved db collision
+* **Update**: and generated cyber-neon D3 force graphs
+
+---
 ## [1.1.5] - 2026-05-27: Release v1.1.5
 
 ### 🚀 Achievements & Added Features

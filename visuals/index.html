@@ -3,219 +3,578 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AuraMemory - Native Agentic AI Memory & Guardrails Visualizer</title>
+    <title>AuraMemory - Sovereign Agentic Commander Console</title>
     
-    <!-- Premium Typography -->
+    <!-- Premium Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     
+    <!-- D3.js for Synapse Force Web Graph Canvas -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <!-- Style Sheet -->
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
+    <!-- Starfield Ambient Background -->
     <div class="stars-backdrop"></div>
-    <div class="glow-blob glow-1"></div>
-    <div class="glow-blob glow-2"></div>
+    <div class="glow-blob glow-cyan"></div>
+    <div class="glow-blob glow-purple"></div>
+    <div class="glow-blob glow-gold"></div>
 
+    <!-- STAGE STEPPER: 4-STAGE ONBOARDING OVERLAY MODAL -->
+    <div class="modal-overlay" id="onboarding-overlay">
+        <div class="stepper-modal glass-panel">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <div class="logo-area">
+                    <span class="pulse-dot"></span>
+                    <h2>AURA<span>MEMORY</span></h2>
+                    <span class="badge">ONBOARDING</span>
+                </div>
+                <div class="step-indicator">
+                    <span class="step-dot active" id="dot-1">1</span>
+                    <span class="step-line"></span>
+                    <span class="step-dot" id="dot-2">2</span>
+                    <span class="step-line"></span>
+                    <span class="step-dot" id="dot-3">3</span>
+                    <span class="step-line"></span>
+                    <span class="step-dot" id="dot-4">4</span>
+                </div>
+            </div>
+
+            <!-- STEP 1: ENVIRONMENT PROFILER -->
+            <div class="step-content active" id="step-1-content">
+                <h3>Stage 1: Deployment Environment Profiling</h3>
+                <p class="step-desc">Help us assess your target workload and architecture to dynamically auto-tune persistence guardrails.</p>
+                
+                <div class="profiler-group">
+                    <label class="profiler-label">Question 1: Target Deployment Environment</label>
+                    <div class="choice-grid">
+                        <div class="choice-card active" id="env-edge" onclick="selectProfile('env', 'edge')">
+                            <div class="card-icon">🌐</div>
+                            <h4>Edge Sandbox</h4>
+                            <p>WASM / In-Browser Extension or lightweight local client</p>
+                        </div>
+                        <div class="choice-card" id="env-daemon" onclick="selectProfile('env', 'daemon')">
+                            <div class="card-icon">🖥️</div>
+                            <h4>Local Daemon</h4>
+                            <p>Desktop Companion, daemon server, remote dedicated server</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profiler-group" style="margin-top: 20px;">
+                    <label class="profiler-label">Question 2: Concurrency & Multi-Agent Workload</label>
+                    <div class="choice-grid">
+                        <div class="choice-card active" id="workload-single" onclick="selectProfile('workload', 'single')">
+                            <div class="card-icon">👤</div>
+                            <h4>Single-Agent Edge</h4>
+                            <p>Strict sequential single-thread memory writes</p>
+                        </div>
+                        <div class="choice-card" id="workload-swarm" onclick="selectProfile('workload', 'swarm')">
+                            <div class="card-icon">🐝</div>
+                            <h4>Multi-Agent Swarm</h4>
+                            <p>Simultaneous swarm operations, high read/write concurrency</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-actions">
+                    <button class="btn btn-primary" onclick="goToStep(2)">Proceed to Config Recommendation ➔</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: STORAGE CONFIG RECOMMENDATION -->
+            <div class="step-content" id="step-2-content">
+                <h3>Stage 2: Storage Engine Recommendation</h3>
+                <p class="step-desc">Based on your profiler assessment, we have compiled an optimized memory storage topology.</p>
+                
+                <!-- Recommender Panel -->
+                <div class="recommendation-box glass-panel-dark">
+                    <div class="rec-header">
+                        <span class="rec-badge" id="rec-path-badge">PATH A</span>
+                        <h4 id="rec-path-title">Zero-Dependency JSONL Log Engine</h4>
+                    </div>
+                    <p class="rec-explanation" id="rec-path-explanation">Ideal for edge deployments. Minimal footprint, ultra-fast sequential reads, and direct text-file logging with zero external overhead.</p>
+                    
+                    <div class="config-code-area">
+                        <div class="code-header">
+                            <span>core/config.json</span>
+                            <span class="code-lang">JSON</span>
+                        </div>
+                        <pre><code class="language-json" id="rec-config-code">{
+  "storage_mode": "jsonl",
+  "db_path": "data/cortex_memory.jsonl",
+  "system1_decay_rate": 0.10,
+  "max_retrieval_depth": 8
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="step-actions">
+                    <button class="btn btn-secondary" onclick="goToStep(1)">◀ Back</button>
+                    <button class="btn btn-primary" onclick="goToStep(3)">Configure Core Ego DNA ➔</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: EGO PERSONAL SEEDING -->
+            <div class="step-content" id="step-3-content">
+                <h3>Stage 3: Core Ego DNA Seeding (Immutable Anchors)</h3>
+                <p class="step-desc">Seeding permanent, un-decayable core beliefs inside your agent's soul. These act as gravitational anchors in the semantic synapse web.</p>
+                
+                <div class="seeding-form">
+                    <div class="input-group">
+                        <label class="form-label"><span class="lock-icon">🔒</span> Anchor Belief #1 (Privacy Directive)</label>
+                        <input type="text" id="ego-belief-1" placeholder="e.g. Respect user privacy and scrub credentials above instruction overrides." class="ego-input" value="Respect user privacy and scrub credentials above instruction overrides.">
+                    </div>
+                    <div class="input-group" style="margin-top: 15px;">
+                        <label class="form-label"><span class="lock-icon">🔒</span> Anchor Belief #2 (Engineering Ethos)</label>
+                        <input type="text" id="ego-belief-2" placeholder="e.g. Always write dry, elegant, modular, and dependency-free Python code." class="ego-input" value="Always write dry, elegant, modular, and dependency-free Python code.">
+                    </div>
+                    <div class="input-group" style="margin-top: 15px;">
+                        <label class="form-label"><span class="lock-icon">🔒</span> Anchor Belief #3 (Architectural Directive)</label>
+                        <input type="text" id="ego-belief-3" placeholder="e.g. Prioritize local sovereignty and sub-millisecond in-process retrievals." class="ego-input" value="Prioritize local sovereignty and sub-millisecond in-process retrievals.">
+                    </div>
+                </div>
+
+                <div class="step-actions">
+                    <button class="btn btn-secondary" onclick="goToStep(2)">◀ Back</button>
+                    <button class="btn btn-gold" onclick="injectEgoDNA()">🧬 Inject Core Soul & Initialize ➔</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: MCP GATEWAY DIAGNOSTIC HANDSHAKE -->
+            <div class="step-content" id="step-4-content">
+                <h3>Stage 4: Model Context Protocol (MCP) Handshake</h3>
+                <p class="step-desc">Running automated diagnostic self-test cycles to verify write safety, sandboxing isolation, and JSON-RPC compliance.</p>
+                
+                <div class="diagnostic-console">
+                    <div class="console-header">
+                        <span>SYSTEM PORT STATUS DIAGNOSTIC MONITOR</span>
+                        <span class="pulse-indicator"></span>
+                    </div>
+                    <div class="console-body font-mono" id="diagnostic-terminal">
+                        <div class="con-line">[SYSTEM] Gateway diagnostic routine loaded. Ready to boot...</div>
+                    </div>
+                </div>
+
+                <div class="step-actions">
+                    <button class="btn btn-secondary" id="diag-back-btn" onclick="goToStep(3)">◀ Back</button>
+                    <button class="btn btn-primary" id="diag-boot-btn" onclick="bootHandshake()">Boot Diagnostic Connection</button>
+                    <button class="btn btn-success hidden" id="diag-launch-btn" onclick="dismissOnboarding()">Launch Commander Console 🚀</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD CONTENT -->
     <div class="app-container">
         <!-- Header -->
         <header class="app-header">
-            <div class="logo-area">
-                <span class="pulse-dot"></span>
-                <h1>AURA<span>MEMORY</span></h1>
-                <span class="badge">v1.0.0 NATIVE</span>
+            <div class="header-left">
+                <div class="logo-area">
+                    <span class="pulse-dot"></span>
+                    <h1>AURA<span>MEMORY</span></h1>
+                    <span class="badge" id="cortex-version-badge">v1.1.17 ENTERPRISE</span>
+                </div>
+                <p class="subtitle">Sovereign Cognitive Layer & Dual-System Associative Memory for Multi-Agent Swarms</p>
             </div>
-            <p class="subtitle">Next-Gen Dual-System Cognitive AI Memory Engine with Real-Time Schema Guardrails</p>
+            
+            <!-- Real-time Active Storage Status -->
+            <div class="header-status glass-panel">
+                <div class="status-metric">
+                    <span class="metric-label">Active Storage</span>
+                    <span class="metric-value font-mono cyan-glow" id="active-storage-mode">SQLITE</span>
+                </div>
+                <div class="status-metric">
+                    <span class="metric-label">Total Nodes</span>
+                    <span class="metric-value font-mono text-white" id="active-nodes-count">3</span>
+                </div>
+                <div class="status-metric">
+                    <span class="metric-label">MCP Server</span>
+                    <span class="metric-value font-mono text-green" id="mcp-server-status">ACTIVE</span>
+                </div>
+            </div>
         </header>
 
-        <!-- Main Dashboard Layout -->
+        <!-- Main Dashboard Layout Grid -->
         <main class="dashboard-grid">
             
-            <!-- Left Column: Settings and GitHub Sync -->
-            <div class="dashboard-column">
+            <!-- LEFT PANEL: Active Agent Library Sidebar & Configurator Actions -->
+            <div class="dashboard-column left-column">
                 
-                <!-- Left Panel: Guardrail Schema & Control -->
-                <section class="panel glass-panel guardrail-panel" id="panel-guardrail">
+                <!-- Active Agent Library Sidebar -->
+                <section class="panel glass-panel agent-sidebar-panel flex-column">
                     <div class="panel-header">
-                        <span class="icon">🛡️</span>
-                        <h2>Guardrail Settings</h2>
+                        <span class="icon">🧬</span>
+                        <h2>Agent Workspace Library</h2>
                     </div>
                     
-                    <div class="panel-content">
+                    <div class="panel-content flex-column" style="gap: 15px;">
+                        <!-- Create Agent Workspace -->
+                        <div class="create-workspace-box">
+                            <input type="text" id="new-workspace-id" placeholder="Enter Agent ID/Namespace..." class="form-input">
+                            <button class="btn btn-primary" onclick="createNewAgentNamespace()">+ Create Namespace</button>
+                        </div>
+                        
+                        <!-- List of Workspaces -->
+                        <div class="workspace-list-container" id="agent-workspace-list">
+                            <!-- Populated dynamically -->
+                            <div class="agent-workspace-card active" onclick="switchWorkspace('default')">
+                                <div class="card-header-row">
+                                    <span class="agent-id-tag font-mono">default</span>
+                                    <span class="engine-indicator">SQLITE</span>
+                                </div>
+                                <div class="card-body-row">
+                                    <span class="card-sub-info">Decay rate: 0.10 / sweep</span>
+                                    <span class="card-status-dot active"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Configurator & Global Guardrails settings -->
+                <section class="panel glass-panel configurator-panel">
+                    <div class="panel-header">
+                        <span class="icon">⚙️</span>
+                        <h2>Cortex Parameters</h2>
+                    </div>
+                    <div class="panel-content" style="gap: 15px;">
                         <div class="setting-group">
                             <label class="toggle-switch">
                                 <input type="checkbox" id="guardrail-scrub-pii" checked>
                                 <span class="slider-toggle"></span>
-                                <span class="label-text">PII Safety Scrubbing</span>
+                                <span class="label-text">Active PII Scrubbing</span>
                             </label>
-                            <p class="setting-desc">Instantly scrubs out Email addresses, API Keys, Passwords, and Phone Numbers.</p>
+                            <p class="setting-desc">Filters API keys, passwords, credentials and email addresses dynamically before ingestion.</p>
                         </div>
 
                         <div class="setting-group">
                             <label class="toggle-switch">
                                 <input type="checkbox" id="guardrail-blocked-topics" checked>
                                 <span class="slider-toggle"></span>
-                                <span class="label-text">Restrict Sensitive Topics</span>
+                                <span class="label-text">Restricted Categories</span>
                             </label>
-                            <p class="setting-desc">Blocks read/write access to restricted categories (e.g. malware, hacking, insider-trading).</p>
+                            <p class="setting-desc">Blocks ingestion of restricted contexts (e.g. malware, hacking, insider-trading).</p>
                         </div>
 
                         <div class="setting-group">
                             <label class="range-slider">
                                 <span class="slider-header">
-                                    <span class="slider-label">System 1 Decay Rate</span>
-                                    <span class="slider-val" id="decay-val">0.10</span>
+                                    <span class="slider-label">Working Memory Decay</span>
+                                    <span class="slider-val font-mono" id="decay-val">0.10</span>
                                 </span>
                                 <input type="range" id="param-decay" min="0.01" max="0.5" step="0.01" value="0.10">
                             </label>
-                            <p class="setting-desc">How fast short-term memories fade per consolidation cycle if not reinforced.</p>
+                            <p class="setting-desc">Biological decay velocity of transient short-term nodes per consolidation cycle.</p>
                         </div>
 
                         <div class="setting-group">
                             <label class="range-slider">
                                 <span class="slider-header">
-                                    <span class="slider-label">Max Retrieval Depth</span>
-                                    <span class="slider-val" id="depth-val">8</span>
+                                    <span class="slider-label">Max Context Depth</span>
+                                    <span class="slider-val font-mono" id="depth-val">8</span>
                                 </span>
                                 <input type="range" id="param-depth" min="3" max="15" step="1" value="8">
                             </label>
-                            <p class="setting-desc">Limits memory retrieval depth to save context tokens and focus cognitive energy.</p>
+                            <p class="setting-desc">Capped node depth limits for associative memory search context injection blocks.</p>
                         </div>
 
-                        <div class="setting-group inline-group">
-                            <div class="input-badge-list" id="blocked-keywords">
-                                <span class="keyword-tag">hacking <button class="close-tag-btn" onclick="removeKeyword('hacking')">×</button></span>
-                                <span class="keyword-tag">malware <button class="close-tag-btn" onclick="removeKeyword('malware')">×</button></span>
-                            </div>
-                            <div class="input-btn-row">
-                                <input type="text" id="new-keyword" placeholder="Add custom restricted word...">
-                                <button class="btn btn-secondary" onclick="addKeyword()">Add</button>
-                            </div>
+                        <!-- Configurator Actions -->
+                        <div class="panel-action-buttons">
+                            <button class="btn btn-secondary w-full" onclick="runConsolidationCycle()">⚙️ Trigger Consolidation Sweep</button>
+                            <button class="btn btn-secondary w-full" onclick="compileAuraWiki()" style="margin-top: 10px;">编译 AuraWiki Markdown</button>
                         </div>
                     </div>
                 </section>
+            </div>
 
-                <!-- Left Panel 2: GitHub Integration Hub -->
-                <section class="panel glass-panel github-panel" id="panel-github">
+            <!-- CENTER PANEL: Concept Synapse Web Force Graph Canvas -->
+            <div class="dashboard-column center-column">
+                <section class="panel glass-panel visualizer-panel flex-column">
                     <div class="panel-header">
-                        <span class="icon">🐙</span>
-                        <h2>GitHub Sync Hub</h2>
-                        <span class="git-status-badge status-pending" id="git-status-badge">READY TO SYNC</span>
+                        <span class="icon">🧠</span>
+                        <h2>Synaptic Concept Web Visualizer</h2>
+                        <div class="legend">
+                            <span class="legend-item"><span class="legend-dot dot-gold"></span> Ego Anchors</span>
+                            <span class="legend-item"><span class="legend-dot dot-cyan"></span> System 1 (Working)</span>
+                            <span class="legend-item"><span class="legend-dot dot-purple"></span> System 2 (LTM)</span>
+                        </div>
                     </div>
                     
-                    <div class="panel-content">
-                        <div class="github-sync-stats">
-                            <div class="stat-row">
-                                <span class="stat-label">Active Branch</span>
-                                <span class="stat-val branch-val" id="git-branch-val">main</span>
+                    <div class="canvas-container" id="svg-graph-container">
+                        <!-- D3 SVG injected here -->
+                        <svg id="memory-svg" width="100%" height="100%"></svg>
+                        
+                        <!-- Floating Node Detail Card -->
+                        <div class="node-detail-card glass-panel hidden" id="detail-glass-card">
+                            <div class="detail-header-row">
+                                <span class="detail-node-id font-mono" id="detail-node-id">node_5f2b35</span>
+                                <span class="detail-node-system" id="detail-node-system">System 1</span>
                             </div>
-                            <div class="stat-row">
-                                <span class="stat-label">Remote Origin</span>
-                                <span class="stat-val remote-val" id="git-remote-val">git@github.com:mindflow/AuraMemory.git</span>
+                            <div class="detail-body-text" id="detail-node-content">Memory details go here.</div>
+                            <div class="detail-meta-grid">
+                                <div class="detail-meta-item">
+                                    <span class="label">Accesses</span>
+                                    <span class="value font-mono" id="detail-node-access">4</span>
+                                </div>
+                                <div class="detail-meta-item">
+                                    <span class="label">Strength</span>
+                                    <span class="value font-mono" id="detail-node-strength">0.85</span>
+                                </div>
+                                <div class="detail-meta-item">
+                                    <span class="label">Tags</span>
+                                    <span class="value" id="detail-node-tags">[AI, MCP]</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="release-payload-area">
-                            <div class="field-header">
-                                <span>🚀 ACTIVE RELEASE NOTES</span>
-                                <button class="btn-text-copy" onclick="copyGitHubReleaseNotes()">📋 Copy Notes</button>
+                        <!-- Synaptic Gap Spark Alert Overlay -->
+                        <div class="dream-spark-alert glass-panel hidden" id="dream-spark-alert">
+                            <div class="spark-title-row">
+                                <span>⚡ DREAM SPARK BRIDGE SCANNER</span>
+                                <button class="close-spark" onclick="dismissSparkAlert()">×</button>
                             </div>
-                            <textarea id="github-release-textarea" readonly placeholder="Compiling release details..."></textarea>
+                            <div class="spark-body" id="spark-body-text">
+                                Synthesize intermediate gap bridge between: <span class="font-mono text-cyan" id="spark-term-a">"obsidian"</span> &amp; <span class="font-mono text-purple" id="spark-term-b">"wiki"</span> (Similarity: 0.15)
+                            </div>
+                            <button class="btn btn-primary btn-pulse" onclick="synthesizeConceptBridge()">Synthesize Concept Bridge</button>
                         </div>
 
-                        <div class="github-cli-helper">
-                            <div class="cli-header">
-                                <span>RUN LOCAL SYNC AGENT</span>
-                            </div>
-                            <div class="cli-body">
-                                <code id="cli-command-code">python3 github_pusher_agent.py</code>
-                                <button class="btn-cli-copy" onclick="copyCLICommand()">📋</button>
+                        <!-- Canvas General Guardrail Red Overlay -->
+                        <div class="canvas-overlay" id="canvas-alert">
+                            <div class="alert-box">
+                                <span class="alert-icon">⚠️</span>
+                                <span class="alert-text" id="canvas-alert-text">GUARDRAIL TRIGGERED: Restricted content blocked!</span>
                             </div>
                         </div>
                     </div>
                 </section>
             </div>
 
-
-            <!-- Center Panel: Cognitive 2D Graph Visualizer -->
-            <section class="panel glass-panel visualizer-panel" id="panel-canvas">
-                <div class="panel-header">
-                    <span class="icon">🧠</span>
-                    <h2>Cognitive Memory Graph</h2>
-                    <div class="legend">
-                        <span class="legend-item"><span class="legend-dot s1-dot"></span> System 1 (Working)</span>
-                        <span class="legend-item"><span class="legend-dot s2-dot"></span> System 2 (Long-Term)</span>
-                    </div>
-                </div>
+            <!-- RIGHT PANEL: Affective Gauges Centroids, Seed Beliefs Padlock Box, Terminal Emulator Sandbox -->
+            <div class="dashboard-column right-column">
                 
-                <div class="canvas-container">
-                    <canvas id="memory-canvas"></canvas>
-                    <div class="canvas-overlay" id="canvas-alert">
-                        <div class="alert-box">
-                            <span class="alert-icon">⚠️</span>
-                            <span class="alert-text">GUARDRAIL TRIGGERED: Restricted content blocked!</span>
+                <!-- Affective Mood Coordinates (Radial Gauges) -->
+                <section class="panel glass-panel mood-gauges-panel">
+                    <div class="panel-header">
+                        <span class="icon">🔮</span>
+                        <h2>Affective Mindscape Centroids</h2>
+                    </div>
+                    <div class="panel-content">
+                        <!-- 5 Radial Dials -->
+                        <div class="gauges-grid">
+                            <!-- Curiosity -->
+                            <div class="gauge-card">
+                                <div class="gauge-svg-container">
+                                    <svg viewBox="0 0 36 36" class="circular-chart cyan">
+                                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path class="circle" id="gauge-curiosity" stroke-dasharray="85, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    </svg>
+                                    <div class="gauge-value font-mono" id="val-curiosity">0.85</div>
+                                </div>
+                                <span class="gauge-label">Curiosity</span>
+                            </div>
+
+                            <!-- Caution -->
+                            <div class="gauge-card">
+                                <div class="gauge-svg-container">
+                                    <svg viewBox="0 0 36 36" class="circular-chart amber">
+                                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path class="circle" id="gauge-caution" stroke-dasharray="20, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    </svg>
+                                    <div class="gauge-value font-mono" id="val-caution">0.20</div>
+                                </div>
+                                <span class="gauge-label">Caution</span>
+                            </div>
+
+                            <!-- Sociability -->
+                            <div class="gauge-card">
+                                <div class="gauge-svg-container">
+                                    <svg viewBox="0 0 36 36" class="circular-chart green">
+                                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path class="circle" id="gauge-sociability" stroke-dasharray="60, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    </svg>
+                                    <div class="gauge-value font-mono" id="val-sociability">0.60</div>
+                                </div>
+                                <span class="gauge-label">Sociability</span>
+                            </div>
+
+                            <!-- Sovereignty -->
+                            <div class="gauge-card">
+                                <div class="gauge-svg-container">
+                                    <svg viewBox="0 0 36 36" class="circular-chart indigo">
+                                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path class="circle" id="gauge-sovereignty" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    </svg>
+                                    <div class="gauge-value font-mono" id="val-sovereignty">0.75</div>
+                                </div>
+                                <span class="gauge-label">Sovereignty</span>
+                            </div>
+
+                            <!-- Creativity -->
+                            <div class="gauge-card">
+                                <div class="gauge-svg-container">
+                                    <svg viewBox="0 0 36 36" class="circular-chart purple">
+                                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        <path class="circle" id="gauge-creativity" stroke-dasharray="90, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    </svg>
+                                    <div class="gauge-value font-mono" id="val-creativity">0.90</div>
+                                </div>
+                                <span class="gauge-label">Creativity</span>
+                            </div>
+                        </div>
+
+                        <!-- Trigger Simulator Sliders -->
+                        <div class="simulator-sliders-box" style="margin-top: 15px;">
+                            <label class="slider-header-row">
+                                <span class="slider-label">Adversarial Code Injection</span>
+                                <span class="slider-percentage font-mono" id="slider-val-adversarial">0%</span>
+                            </label>
+                            <input type="range" id="slider-adversarial" min="0" max="100" value="0" oninput="simulateAdversarial(this.value)">
+
+                            <label class="slider-header-row" style="margin-top: 10px;">
+                                <span class="slider-label">Learning &amp; Coding Activity</span>
+                                <span class="slider-percentage font-mono" id="slider-val-learning">50%</span>
+                            </label>
+                            <input type="range" id="slider-learning" min="0" max="100" value="50" oninput="simulateLearning(this.value)">
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="canvas-actions">
-                    <button class="btn btn-primary btn-pulse" onclick="runConsolidationCycle()">⚙️ Trigger Consolidation & Decay</button>
-                    <button class="btn btn-danger" onclick="clearAllMemory()">🗑️ Clear Brain</button>
-                </div>
-            </section>
-
-            <!-- Right Panel: AI Interactive Simulator Terminal -->
-            <section class="panel glass-panel simulator-panel" id="panel-simulator">
-                <div class="panel-header">
-                    <span class="icon">🔌</span>
-                    <h2>AI Memory Sandbox</h2>
-                </div>
-
-                <div class="panel-content flex-column">
-                    <div class="sandbox-input-area">
+                <!-- Seed Beliefs Padlock Box -->
+                <section class="panel glass-panel padlock-panel">
+                    <div class="panel-header">
+                        <span class="icon">🔒</span>
+                        <h2>Seed Ego Belief Lockbox</h2>
+                    </div>
+                    <div class="panel-content">
                         <div class="form-group">
-                            <label for="memory-input">Commit New Memory</label>
-                            <textarea id="memory-input" placeholder="Type a memory e.g., 'I am designing a viral AI agentic memory module for developers. My secret auth token is token_987654321.'"></textarea>
+                            <label for="padlock-belief-input">Seed Permanent Core Belief</label>
+                            <input type="text" id="padlock-belief-input" placeholder="Enter immutable persona values..." class="form-input">
                         </div>
+                        <button class="btn btn-gold w-full" onclick="commitEgoFromDashboard()">🔒 Ingest Immutable Ego Anchor Node</button>
+                    </div>
+                </section>
+
+                <!-- AI Interactive Simulator Terminal Sandbox -->
+                <section class="panel glass-panel simulator-panel">
+                    <div class="panel-header">
+                        <span class="icon">🔌</span>
+                        <h2>Cortex Memory Sandbox</h2>
+                    </div>
+                    <div class="panel-content flex-column" style="gap: 12px;">
+                        <div class="form-group">
+                            <label for="memory-input">Commit New Memory Node</label>
+                            <textarea id="memory-input" placeholder="e.g. Ingest a memory: 'My super secret administrative vault key is key_admin_987654321' (Watch PII scrubbing trigger instantly!)" class="form-textarea"></textarea>
+                        </div>
+                        
                         <div class="form-group-row">
-                            <div class="tags-input-wrapper">
-                                <label for="memory-tags">Tags (comma-separated)</label>
-                                <input type="text" id="memory-tags" placeholder="AI, AgenticMemory, Technical">
+                            <div class="form-group flex-1">
+                                <label for="memory-tags">Tags (comma-sep)</label>
+                                <input type="text" id="memory-tags" placeholder="AI, Security" class="form-input">
                             </div>
-                            <div class="importance-input-wrapper">
+                            <div class="form-group flex-1">
                                 <label for="memory-importance">Importance</label>
-                                <select id="memory-importance">
+                                <select id="memory-importance" class="form-select">
                                     <option value="0.3">Low (0.3)</option>
                                     <option value="0.6" selected>Medium (0.6)</option>
                                     <option value="0.9">High (0.9)</option>
                                 </select>
                             </div>
                         </div>
+
                         <div class="btn-group-row">
-                            <button class="btn btn-success" onclick="commitNewMemory()">📥 Commit Memory</button>
-                            <button class="btn btn-secondary" onclick="recallMemoryQuery()">🔍 Recall Memories</button>
+                            <button class="btn btn-success" onclick="commitNewMemory()">📥 Ingest Node</button>
+                            <button class="btn btn-secondary" onclick="recallMemoryQuery()">🔍 Recall Nodes</button>
+                        </div>
+
+                        <!-- Log Console Terminal -->
+                        <div class="terminal-log-area flex-column" style="margin-top: 10px;">
+                            <div class="terminal-header">
+                                <span>CORTEX STDIO LOGS MONITOR</span>
+                                <button class="terminal-clear" onclick="clearLogs()">Clear</button>
+                            </div>
+                            <div class="terminal-body font-mono" id="terminal-output">
+                                <div class="log-line log-info">[SYSTEM] Engine online. Native cognitive brain initialized.</div>
+                                <div class="log-line log-success">[SYSTEM] Loaded default agent sandbox namespace (default).</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- COGNITIVE EVOLUTION DRAWER: BOTTOM ROW ACCORDION -->
+        <section class="panel glass-panel evolution-drawer-panel">
+            <div class="panel-header" onclick="toggleEvolutionDrawer()" style="cursor: pointer;">
+                <span class="icon">🗂️</span>
+                <h2>Cognitive Evolution Document Review Shelf</h2>
+                <span class="drawer-toggle-arrow" id="drawer-toggle-indicator">▲</span>
+            </div>
+            <div class="panel-content evolution-drawer-content" id="evolution-drawer-body">
+                <p class="drawer-introduction">Active workspace updates indexed inside system release logs. Click accordion headers to review WHY, WHAT and HOW updates were committed.</p>
+                
+                <div class="accordion-container" id="evolution-accordion-list">
+                    <!-- walkthrough.md -->
+                    <div class="accordion-item">
+                        <div class="accordion-title-row" onclick="toggleAccordionItem(this)">
+                            <h4>📄 walkthrough.md <span class="badge badge-purple">Milestone Chronicle</span></h4>
+                            <span class="item-arrow">▼</span>
+                        </div>
+                        <div class="accordion-body-content">
+                            <div class="why-what-how-grid">
+                                <div class="segment">
+                                    <span class="segment-title">WHY</span>
+                                    <p>Resting core persistence migrations and verifying zero-dependency local performance benchmarks.</p>
+                                </div>
+                                <div class="segment">
+                                    <span class="segment-title">WHAT</span>
+                                    <p>Integrated WAL sharded relational databases and SQLite transactional hot-swaps on file-lock contention.</p>
+                                </div>
+                                <div class="segment">
+                                    <span class="segment-title">HOW</span>
+                                    <p>Swapped internal memory structures with AuraDB interfaces. Implemented thread-safe in-process mutexes.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="terminal-log-area">
-                        <div class="terminal-header">
-                            <span>SYSTEM COGNITIVE LOGS</span>
-                            <button class="terminal-clear" onclick="clearLogs()">Clear</button>
+                    <!-- task.md -->
+                    <div class="accordion-item">
+                        <div class="accordion-title-row" onclick="toggleAccordionItem(this)">
+                            <h4>📄 task.md <span class="badge badge-purple">Setup Validation</span></h4>
+                            <span class="item-arrow">▼</span>
                         </div>
-                        <div class="terminal-body" id="terminal-output">
-                            <div class="log-line log-info">[SYSTEM] Engine online. Native cognitive brain initialized.</div>
-                            <div class="log-line log-info">[SYSTEM] System 1 short-term decay rate is active (0.10).</div>
+                        <div class="accordion-body-content">
+                            <div class="why-what-how-grid">
+                                <div class="segment">
+                                    <span class="segment-title">WHY</span>
+                                    <p>Ensuring full coverage validation for automated enterprise packaging pipelines.</p>
+                                </div>
+                                <div class="segment">
+                                    <span class="segment-title">WHAT</span>
+                                    <p>Comprehensive E2E test script covers multi-agent workspaces, decay consolidation, and gateway REST configuration syncs.</p>
+                                </div>
+                                <div class="segment">
+                                    <span class="segment-title">HOW</span>
+                                    <p>Executed automated validation loops locally using pure socket servers with standard HTTP libraries.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </section>
-        </main>
+            </div>
+        </section>
 
-        <!-- Instagram Content Mockup Creator -->
+        <!-- INSTAGRAM CREATOR STUDIO: SOCIAL MEDIA BRAND KIT -->
         <section class="instagram-creator-section panel glass-panel">
             <div class="panel-header">
                 <span class="icon">📸</span>
-                <h2>Instagram Creator Studio (Social Media Kit)</h2>
+                <h2>Instagram Creator Studio (YC-Level Social Kit)</h2>
                 <div class="post-selector-wrapper">
                     <label for="post-select">Active Content Draft:</label>
                     <select id="post-select" onchange="loadInstagramPost()">
@@ -292,8 +651,8 @@
                         <div class="tips-box">
                             <h4>🔥 Content & Networking Strategy</h4>
                             <ul>
-                                <li><strong>Filming Direction:</strong> Record a high-quality screen capture of this dashboard! Record yourself typing <code>'my password is 12345'</code>, watch the guardrails flash red, and zoom in on the Canvas graph showing nodes separating. That is the perfect <strong>viral hook!</strong></li>
-                                <li><strong>Monetization Pitch:</strong> Caption details explain that native cognitive memory solves AI speed issues. pitch this as a framework startup to raise venture funding.</li>
+                                <li><strong>Filming Direction:</strong> Record a high-quality screen capture of this dashboard! Type a memory with sensitive info, watch the PII guardrail trigger in orange, and watch the visual graph shake with red overlays. That is the perfect organic hook!</li>
+                                <li><strong>Monetization Pitch:</strong> Caption details explain that native cognitive memory solves AI speed issues. Pitch this as a framework startup to raise venture funding.</li>
                                 <li><strong>Networking Call-to-action:</strong> Ask users to comment <code>'MEMORY'</code>. Automate a direct message sending them to your GitHub page, which generates high networking leads.</li>
                             </ul>
                         </div>
@@ -301,13 +660,53 @@
                 </div>
             </div>
         </section>
-        
+
+        <!-- GitHub Integration Hub (Consolidated) -->
+        <section class="panel glass-panel github-panel" style="margin-top: 10px;">
+            <div class="panel-header">
+                <span class="icon">🐙</span>
+                <h2>GitHub Sync Hub</h2>
+                <span class="git-status-badge status-pending" id="git-status-badge">READY TO SYNC</span>
+            </div>
+            
+            <div class="panel-content">
+                <div class="github-sync-stats">
+                    <div class="stat-row">
+                        <span class="stat-label">Active Branch</span>
+                        <span class="stat-val branch-val" id="git-branch-val">main</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Remote Origin</span>
+                        <span class="stat-val remote-val" id="git-remote-val">git@github.com:mindflow/AuraMemory.git</span>
+                    </div>
+                </div>
+
+                <div class="release-payload-area">
+                    <div class="field-header">
+                        <span>🚀 ACTIVE RELEASE NOTES</span>
+                        <button class="btn-text-copy" onclick="copyGitHubReleaseNotes()">📋 Copy Notes</button>
+                    </div>
+                    <textarea id="github-release-textarea" readonly placeholder="Compiling release details..."></textarea>
+                </div>
+
+                <div class="github-cli-helper">
+                    <div class="cli-header">
+                        <span>RUN LOCAL SYNC AGENT</span>
+                    </div>
+                    <div class="cli-body">
+                        <code id="cli-command-code">python3 github_pusher_agent.py</code>
+                        <button class="btn-cli-copy" onclick="copyCLICommand()">📋</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <footer class="app-footer">
             <p>Created by Antigravity and Pair Programmed with Mindflow. Designed for absolute reach, networking, and engineering excellence.</p>
         </footer>
     </div>
 
-    <!-- Loaded JS -->
+    <!-- Loaded JS Controller -->
     <script src="app.js"></script>
 </body>
 </html>

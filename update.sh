@@ -1,95 +1,34 @@
-#!/usr/bin/env bash
-# AuraMemory Zero-Overhead Sync & Dependency Update Manager
-# Automates Git synchronization, local python venv isolation, and package installer.
+#!/bin/bash
+# Aura Memory: update.sh
+# Next-generation Agentic Memory setup and update configurator script.
 
-# Color escape codes for premium terminal layout
-C_BLUE="\033[94m"
-C_CYAN="\033[96m"
-C_GREEN="\033[92m"
-C_YELLOW="\033[93m"
-C_RED="\033[91m"
-C_PURPLE="\033[95m"
-C_BOLD="\033[1m"
-C_END="\033[0m"
+echo -e "\033[1;36m🚀 Bootstrapping upgraded Aura Memory framework...\033[0m"
 
-echo -e "${C_PURPLE}${C_BOLD}======================================================================${C_END}"
-echo -e "${C_PURPLE}${C_BOLD}    🧠⚙️ AURAMEMORY: ZERO-OVERHEAD AUTONOMOUS UPDATE MANAGER ⚙️🧠${C_END}"
-echo -e "${C_PURPLE}${C_BOLD}======================================================================${C_END}"
-
-# Resolve the absolute path of the script directory
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$SCRIPT_DIR" || exit 1
-
-# 1. Pull latest code from GitHub
-if [ -d ".git" ]; then
-    echo -e "🚀 ${C_BLUE}Fetching latest updates from GitHub...${C_END}"
-    git pull origin main
-    if [ $? -eq 0 ]; then
-        echo -e "✅ ${C_GREEN}GitHub sync complete!${C_END}"
-    else
-        echo -e "⚠️ ${C_YELLOW}Git pull failed or branch was already up-to-date. Proceeding...${C_END}"
-    fi
-else
-    echo -e "ℹ️ ${C_BLUE}Running in standalone package mode (Git not active in this subfolder).${C_END}"
+# Perform core file replacement under interactive terminal permissions
+if [ -f "core/cortex_upgrade.py" ]; then
+    mv -f "core/cortex_upgrade.py" "core/cortex.py"
+    echo -e "\033[1;32m✅ Swapped core/cortex.py with next-generation version.\033[0m"
 fi
 
-# 2. Check Python3 installation
-if ! command -v python3 &> /dev/null; then
-    echo -e "❌ ${C_RED}Error: Python3 is not installed or not in PATH.${C_END}"
-    exit 1
+if [ -f "core/gateway_upgrade.py" ]; then
+    mv -f "core/gateway_upgrade.py" "core/gateway.py"
+    echo -e "\033[1;32m✅ Swapped core/gateway.py with next-generation version.\033[0m"
 fi
 
-# 3. Handle Python virtual environment (.venv)
-VENV_DIR="$SCRIPT_DIR/.venv"
-if [ ! -d "$VENV_DIR" ]; then
-    echo -e "\n📦 ${C_CYAN}Initializing isolated local Python virtual environment (.venv)...${C_END}"
-    python3 -m venv "$VENV_DIR"
-    if [ $? -eq 0 ]; then
-        echo -e "✅ ${C_GREEN}Virtual environment created successfully! (System remains unpolluted)${C_END}"
-    else
-        echo -e "⚠️ ${C_YELLOW}Could not create venv automatically. Checking system dependencies...${C_END}"
-    fi
+# Perform visual GUI dashboard file replacement under interactive permissions
+if [ -f "visuals/index_upgrade.html" ]; then
+    mv -f "visuals/index_upgrade.html" "visuals/index.html"
+    echo -e "\033[1;32m✅ Swapped visuals/index.html with next-generation GUI.\033[0m"
 fi
 
-# 4. Activate virtual environment
-if [ -d "$VENV_DIR" ]; then
-    echo -e "🔌 ${C_BLUE}Activating isolated local workspace environment...${C_END}"
-    source "$VENV_DIR/bin/activate"
-else
-    echo -e "⚠️ ${C_YELLOW}Running using global system Python (venv not active).${C_END}"
-fi
+# Ensure executable permissions are correct
+chmod +x core/cortex.py core/gateway.py configurator.py 2>/dev/null
 
-# 5. Upgrade pip and install package requirements autonomously
-if [ -f "requirements.txt" ]; then
-    echo -e "\n⚡ ${C_CYAN}Autonomously scanning package requirements...${C_END}"
-    pip install --upgrade pip -q
-    # Perform install silently unless an error occurs
-    pip install -r requirements.txt -q
-    if [ $? -eq 0 ]; then
-        echo -e "✅ ${C_GREEN}Dependencies scanned & updated successfully! (Zero installation overheads)${C_END}"
-    else
-        echo -e "❌ ${C_RED}Failed to install packages in requirements.txt.${C_END}"
-    fi
-fi
+# Launch the interactive storage profiler questionnaire
+python3 configurator.py
 
-# 6. Execute local self-validation loops to verify runtime health
-echo -e "\n🛡️ ${C_PURPLE}Running cognitive and MCP gateway validation suite...${C_END}"
-
-python3 core/cortex.py &> /dev/null
-CORTEX_STATUS=$?
-
-python3 core/gateway.py --validate &> /dev/null
-GATEWAY_STATUS=$?
-
-if [ $CORTEX_STATUS -eq 0 ] && [ $GATEWAY_STATUS -eq 0 ]; then
-    echo -e "✅ ${C_GREEN}All system self-tests and MCP Gateway handshakes passed flawlessly!${C_END}"
-    echo -e "\n${C_GREEN}${C_BOLD}======================================================================${C_END}"
-    echo -e "${C_GREEN}${C_BOLD}  🎉 SUCCESS! AURAMEMORY UPDATE & AUTO-INSTALL COMPLETED!${C_END}"
-    echo -e "${C_GREEN}${C_BOLD}======================================================================${C_END}"
-    echo -e "🤖 Your Universal MCP JSON-RPC Gateway is fully prepared."
-    echo -e "📁 Absolute path: ${C_CYAN}$SCRIPT_DIR/core/gateway.py${C_END}"
-    echo -e "🔌 Connect to Claude Desktop or Cursor to begin co-working natively!"
-else
-    echo -e "❌ ${C_RED}System self-validation failed. Please review error logs in core/cortex.py.${C_END}"
-    exit 1
+# Overwrite the old update.sh cleanly
+if [ -f "update_new.sh" ]; then
+    mv -f "update_new.sh" "update.sh"
+    chmod +x update.sh 2>/dev/null
 fi

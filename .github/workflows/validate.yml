@@ -1,0 +1,32 @@
+name: AuraMemory Cognitive Validation CI
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Bootstrap Environment Dependencies
+        run: |
+          chmod +x update.sh
+          ./update.sh
+
+      - name: Validate Core Cognitive Engine
+        run: |
+          python3 core/cortex.py
+
+      - name: Validate MCP Gateway JSON-RPC Interfaces
+        run: |
+          python3 core/gateway.py --validate

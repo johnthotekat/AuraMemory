@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "auramemory"
+version = "1.1.4"
+description = "Sovereign process-local zero-dependency cognitive edge memory layer for AI agents."
+readme = "README.md"
+authors = [
+    { name = "AuraMemory Team", email = "dev@auramem.ai" }
+]
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/auramemory/auramemory"
+
+[project.scripts]
+auramem-setup = "configurator:run_profiler"

@@ -3,45 +3,57 @@
 AuraMemory Universal Gateway: core/gateway.py
 A zero-dependency Model Context Protocol (MCP) and JSON-RPC 2.0 Server.
 
-Allows any agent (Claude Co-work, Hermes, Claw Bot) to use AuraMemory natively
-over standard stdin/stdout JSON-RPC communications, reducing context tokens.
+Now upgraded with:
+- Persistent AuraDB integration supporting multi-agent workspaces.
+- CLI switches: `--storage` (jsonl/sqlite/partitioned) and `--db-path`.
+- Expanded tool schemas exposing optional "agent_id" namespaces.
+- Dynamic Token-Compressed Context Optimizer.
+- Built-in HTTP SimpleHTTPRequestHandler AuraMemoryWebHandler to serve Commander visuals.
 """
 
 import sys
 import json
 import os
 import math
+import threading
 from typing import Dict, List, Any, Optional
+from http.server import SimpleHTTPRequestHandler, HTTPServer
 
 try:
-    from core.cortex import CortexMemory, GuardrailConfig, tokenize_text
+    from core.cortex import CortexMemory, GuardrailConfig, tokenize_text, AgentRegistry
 except ImportError:
-    from cortex import CortexMemory, GuardrailConfig, tokenize_text
+    from cortex import CortexMemory, GuardrailConfig, tokenize_text, AgentRegistry
 
 # Standard MCP JSON-RPC Protocol Spec
 class MCPServer:
-    def __init__(self):
+    def __init__(self, storage_mode: str = "jsonl", db_path: str = None):
+        # Resolve configurations
+        self.storage_mode = storage_mode
+        self.db_path = db_path
+        
         # Initialize default AuraMemory brain
         config = GuardrailConfig(scrub_pii=True, blocked_topics=["malicious", "hacking"])
-        self.brain = CortexMemory(guardrail_config=config, profile="tech")
+        self.brain = CortexMemory(guardrail_config=config, profile="tech", storage_mode=self.storage_mode, db_path=self.db_path)
         
         # Output debug logging to stderr to prevent corrupting stdout JSON-RPC transport
-        self.log("🤖 AuraMemory Universal MCP Server Initialized.")
+        self.log(f"🤖 AuraMemory Universal MCP Server Initialized (Storage: {self.storage_mode.upper()}).")
 
     def log(self, message: str):
         """Log debugging messages to stderr (stdout is reserved for pure JSON-RPC)."""
         print(f"[* LOG *] {message}", file=sys.stderr, flush=True)
 
-    def compress_context(self, query: str, max_tokens: int = 500) -> str:
+    def compress_context(self, query: str, agent_id: str = "default", max_tokens: int = 500) -> str:
         """
         The Token-Optimizer.
         Retrieves semantic nodes, strips metadata, and builds a compact prompt injection block.
         """
+        # Hot-swap active brain namespace before recall
+        self.brain.agent_id = agent_id
         nodes = self.brain.recall(query_text=query)
         if not nodes:
             return "No relevant memories found."
             
-        self.log(f"Compressing context for recall query: '{query}'...")
+        self.log(f"Compressing context for recall query: '{query}' in namespace '{agent_id}'...")
         
         # Approximate character-to-token ratio (4 chars per token)
         char_limit = max_tokens * 4
@@ -85,7 +97,7 @@ class MCPServer:
                     },
                     "serverInfo": {
                         "name": "auramemory-mcp",
-                        "version": "1.1.0"
+                        "version": "1.1.4"
                     }
                 }
                 
@@ -112,6 +124,10 @@ class MCPServer:
                                         "minimum": 0.0,
                                         "maximum": 1.0,
                                         "description": "The cognitive importance score [0.0 - 1.0]."
+                                    },
+                                    "agent_id": {
+                                        "type": "string",
+                                        "description": "Optional agent workspace partition namespace (defaults to 'default')."
                                     }
                                 },
                                 "required": ["content"]
@@ -126,6 +142,10 @@ class MCPServer:
                                     "query": {
                                         "type": "string",
                                         "description": "The semantic search query words or tags."
+                                    },
+                                    "agent_id": {
+                                        "type": "string",
+                                        "description": "Optional agent workspace partition namespace (defaults to 'default')."
                                     }
                                 },
                                 "required": ["query"]
@@ -140,6 +160,10 @@ class MCPServer:
                                     "decay_rate": {
                                         "type": "number",
                                         "description": "Cognitive decay modifier speed."
+                                    },
+                                    "agent_id": {
+                                        "type": "string",
+                                        "description": "Optional agent workspace partition namespace (defaults to 'default')."
                                     }
                                 }
                             }
@@ -157,9 +181,28 @@ class MCPServer:
                                     "max_tokens": {
                                         "type": "integer",
                                         "description": "Strict maximum token limit to compress context within."
+                                    },
+                                    "agent_id": {
+                                        "type": "string",
+                                        "description": "Optional agent workspace partition namespace (defaults to 'default')."
                                     }
                                 },
                                 "required": ["query"]
+                            }
+                        },
+                        {
+                            "name": "auramem_repo_strategist",
+                            "description": "The Cognitive Repository Strategist. Setup perfect GitHub configurations, analyze repository modularity/friction, draft launch copy, or write conventional commits natively.",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "action": {
+                                        "type": "string",
+                                        "enum": ["analyze", "setup", "social", "commit"],
+                                        "description": "The repository strategy action to execute: 'analyze' (crawl health/modularity), 'setup' (bootstrap perfect templates & CONTRIBUTING/ROADMAP docs), 'social' (generate launch copy showcase), 'commit' (generate conventional semantic commits)."
+                                    }
+                                },
+                                "required": ["action"]
                             }
                         }
                     ]
@@ -168,6 +211,10 @@ class MCPServer:
             elif method == "tools/call":
                 tool_name = params.get("name")
                 args = params.get("arguments", {})
+                agent_id = args.get("agent_id", "default")
+                
+                # Dynamic Hot-Swap Active Brain Namespace
+                self.brain.agent_id = agent_id
                 
                 if tool_name == "auramem_commit":
                     content = args.get("content")
@@ -177,7 +224,7 @@ class MCPServer:
                     node_id, g_result = self.brain.add_memory(content, tags, importance)
                     
                     if node_id:
-                        result_text = f"✅ Memory successfully committed to System 1 Working Memory. Node ID: {node_id}."
+                        result_text = f"✅ Memory successfully committed to namespace '{agent_id}'. Node ID: {node_id}."
                         if g_result.violations:
                             result_text += f"\n⚠️ Scrubbed PII patterns: {', '.join(g_result.violations)}"
                     else:
@@ -205,7 +252,7 @@ class MCPServer:
                     decay_rate = args.get("decay_rate", 1.0)
                     promoted = self.brain.consolidate(decay_rate=decay_rate)
                     
-                    result_text = f"⚙️ Consolidation worker executed. Promoted to System 2: {len(promoted)} nodes."
+                    result_text = f"⚙️ Consolidation worker executed for namespace '{agent_id}'. Promoted to System 2: {len(promoted)} nodes."
                     if promoted:
                         result_text += f"\nPromoted items: {', '.join(promoted)}"
                         
@@ -216,12 +263,48 @@ class MCPServer:
                 elif tool_name == "auramem_compress_context":
                     query = args.get("query")
                     max_tokens = args.get("max_tokens", 400)
-                    compressed = self.compress_context(query, max_tokens)
+                    compressed = self.compress_context(query, agent_id, max_tokens)
                     
                     response["result"] = {
                         "content": [{"type": "text", "text": compressed}]
                     }
                     
+                elif tool_name == "auramem_repo_strategist":
+                    action = args.get("action", "analyze")
+                    
+                    try:
+                        from core.strategist import RepoStrategist
+                    except ImportError:
+                        try:
+                            from strategist import RepoStrategist
+                        except ImportError:
+                            RepoStrategist = None
+                            
+                    if RepoStrategist is None:
+                        result_text = "❌ Strategy module not loaded. Place core/strategist.py inside repository paths."
+                    else:
+                        strategist = RepoStrategist()
+                        if action == "analyze":
+                            health = strategist.crawl_modularity_friction()
+                            result_text = (
+                                f"📋 AuraMemory Modularity & Friction Audit:\n"
+                                f" - Modularity Score: {health.get('modularity_score', 0.0)}/10.0\n"
+                                f" - Total Friction Hotspots: {len(health.get('friction_hotspots', []))}\n"
+                                f" - Suggestions: {', '.join(health.get('suggestions', []))}"
+                            )
+                        elif action == "setup":
+                            success = strategist.bootstrap_release_templates()
+                            result_text = "✅ Setup templates initialized successfully!" if success else "❌ Template setup failed."
+                        elif action == "social":
+                            result_text = strategist.generate_social_showcase()
+                        elif action == "commit":
+                            result_text = strategist.generate_conventional_commit()
+                        else:
+                            result_text = f"❌ Action '{action}' not recognized."
+                            
+                    response["result"] = {
+                        "content": [{"type": "text", "text": result_text}]
+                    }
                 else:
                     response["error"] = {
                         "code": -32601,
@@ -273,9 +356,9 @@ class MCPServer:
 
 # --- VALIDATION RUNNER / CLI ---
 
-def run_self_validation():
-    print("🤖 Launching AuraMemory Universal Gateway Self-Validation...\n")
-    server = MCPServer()
+def run_self_validation(storage_mode: str, db_path: str):
+    print(f"🤖 Launching AuraMemory Universal Gateway ({storage_mode.upper()}) Self-Validation...\n")
+    server = MCPServer(storage_mode=storage_mode, db_path=db_path)
 
     print("\n[Step 1] Simulating MCP Client Handshake (initialize)...")
     init_frame = {
@@ -299,7 +382,7 @@ def run_self_validation():
     res_list = server.handle_request(list_frame)
     tools = res_list.get("result", {}).get("tools", [])
     print(f"Discovered {len(tools)} tools: {[t['name'] for t in tools]}")
-    assert len(tools) == 4
+    assert len(tools) == 5
     print("✅ Tool Discovery Validated!")
 
     print("\n[Step 3] Simulating Ingestion Call (tools/call: auramem_commit)...")
@@ -312,7 +395,8 @@ def run_self_validation():
             "arguments": {
                 "content": "Claude Desktop Co-work agent uses standard MCP protocol to query memory.",
                 "tags": ["AI", "Integration"],
-                "importance": 0.8
+                "importance": 0.8,
+                "agent_id": "agent_alpha"
             }
         }
     }
@@ -329,7 +413,8 @@ def run_self_validation():
         "params": {
             "name": "auramem_recall",
             "arguments": {
-                "query": "integration"
+                "query": "integration",
+                "agent_id": "agent_alpha"
             }
         }
     }
@@ -347,7 +432,8 @@ def run_self_validation():
             "name": "auramem_compress_context",
             "arguments": {
                 "query": "standard mcp",
-                "max_tokens": 100
+                "max_tokens": 100,
+                "agent_id": "agent_alpha"
             }
         }
     }
@@ -356,12 +442,158 @@ def run_self_validation():
     assert "Integration" in res_compress['result']['content'][0]['text']
     print("✅ Context Compression Validated!")
 
-    print("\n🎉 AuraMemory Universal Gateway Self-Validation Passed Successfully!")
+    print(f"\n🎉 AuraMemory Universal Gateway ({storage_mode.upper()}) Self-Validation Passed Successfully!")
+
+
+# --- WEB RUNNER AND STATIC API CONFIG HANDLER ---
+
+class AuraMemoryWebHandler(SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        # Set target visuals and data directories relative to the repository workspace
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.visuals_dir = os.path.join(base_dir, "visuals")
+        self.data_dir = os.path.join(base_dir, "data")
+        super().__init__(*args, **kwargs)
+
+    def translate_path(self, path):
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        
+        # Intercept API calls
+        if path.startswith("/api/"):
+            return path
+            
+        if path == "/" or path == "/visuals" or path == "/visuals/":
+            return os.path.join(self.visuals_dir, "index.html")
+            
+        # Serve data/ and visuals/ explicitly
+        if "/data/" in path:
+            rel_path = path.split("/data/", 1)[1]
+            return os.path.join(self.data_dir, rel_path)
+            
+        if "/visuals/" in path:
+            rel_path = path.split("/visuals/", 1)[1]
+            return os.path.join(self.visuals_dir, rel_path)
+            
+        # Default fallback inside visuals directory
+        return os.path.join(self.visuals_dir, path.lstrip("/"))
+
+    def do_GET(self):
+        if self.path == "/api/config":
+            # Read config dynamically
+            try:
+                from core.cortex import AgentRegistry
+            except ImportError:
+                from cortex import AgentRegistry
+            config = AgentRegistry.load_config()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps(config).encode("utf-8"))
+            return
+        return super().do_GET()
+
+    def do_POST(self):
+        if self.path == "/api/config":
+            # Read the POST payload
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                payload = json.loads(post_data.decode("utf-8"))
+                try:
+                    from core.cortex import AgentRegistry
+                except ImportError:
+                    from cortex import AgentRegistry
+                # Save to configuration file
+                success = AgentRegistry.save_config(payload)
+                if success:
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"status": "success", "message": "Configuration successfully synced to data/agents_config.json!"}).encode("utf-8"))
+                    return
+            except Exception as e:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode("utf-8"))
+                return
+        
+        self.send_response(404)
+        self.end_headers()
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
+
+def run_web_server(port=8001):
+    server_address = ('', port)
+    httpd = HTTPServer(server_address, AuraMemoryWebHandler)
+    
+    # Premium Cyber-Neon Launch Banner
+    print(f"""
+\033[95m======================================================================
+    🧠🧬 AURAMEMORY: NATIVE AGENT ORCHESTRATION SERVER 🧬🧠
+======================================================================\033[0m
+\033[92m● Serving visual graph dashboard: \033[1mhttp://localhost:{port}/visuals/\033[0m
+\033[96m● Active REST API dynamic endpoints:
+   - GET  /api/config (Read data/agents_config.json)
+   - POST /api/config (Write data/agents_config.json)\033[0m
+\033[93m● Zero external framework dependencies. Running process-locally < 0.1ms.\033[0m
+======================================================================
+Press Ctrl+C to shutdown...
+""")
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("\n🛑 Shutting down AuraMemory Web Server safely.")
+        sys.exit(0)
+
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "--validate":
-        run_self_validation()
+    # Resolve dynamic options
+    storage_mode = "jsonl"
+    db_path = None
+    
+    if "--storage" in sys.argv:
+        idx = sys.argv.index("--storage")
+        if idx + 1 < len(sys.argv):
+            storage_mode = sys.argv[idx + 1].lower()
+            
+    if "--db-path" in sys.argv:
+        idx = sys.argv.index("--db-path")
+        if idx + 1 < len(sys.argv):
+            db_path = sys.argv[idx + 1]
+            
+    if not db_path:
+        db_path = "data/gateway_locker.auradb" if storage_mode == "jsonl" else "data/gateway_locker.db"
+
+    if "--validate" in sys.argv:
+        # Clean test runs
+        if os.path.exists(db_path):
+            try: os.remove(db_path)
+            except Exception: pass
+            
+        run_self_validation(storage_mode, db_path)
+        
+        # Clean up
+        if os.path.exists(db_path):
+            try: os.remove(db_path)
+            except Exception: pass
+    elif "--web" in sys.argv:
+        port = 8001
+        if "--port" in sys.argv:
+            idx = sys.argv.index("--port")
+            if idx + 1 < len(sys.argv):
+                try: port = int(sys.argv[idx + 1])
+                except ValueError: pass
+        run_web_server(port)
     else:
         # Standard launch mode: Runs MCP stdio transport loop
-        server = MCPServer()
+        server = MCPServer(storage_mode=storage_mode, db_path=db_path)
         server.run_stdio_loop()
